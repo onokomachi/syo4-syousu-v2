@@ -310,6 +310,7 @@ export const AddSubSimulator: React.FC<SimProps> = ({ problem, level, buildMode 
       skillId: buildMode ? `addsub-build-${level}` : `addsub-${level}`,
       label: `${problem.a} ${problem.op} ${problem.b}`,
       correct: mistakes === 0,
+      misses: mistakes > 0 ? [{ tag: 'calc-addsub' }] : undefined,
     });
     onResult?.(mistakes === 0);
   };
@@ -665,6 +666,7 @@ export const AddSubMasterSimulator: React.FC<MasterProps> = ({ problem, level, o
         skillId: `addsub-master-${level}`,
         label: `${problem.a} ${problem.op} ${problem.b}`,
         correct: perfect,
+        misses: perfect ? undefined : [{ tag: 'calc-addsub' }],
       });
       onResult?.(perfect);
       setRecorded(true);

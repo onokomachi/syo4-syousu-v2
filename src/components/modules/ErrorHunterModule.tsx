@@ -10,6 +10,7 @@ import confetti from 'canvas-confetti';
 import { AppShell } from '../shared/AppShell';
 import { AnswerEntry } from '../shared/AnswerEntry';
 import { ErrorExample, generateError } from '../../lib/errorHunter';
+import { reasonToTag } from '../../lib/missTags';
 import { useProgressStore } from '../../store/progressStore';
 import { playClear, playSoftTry } from '../../lib/sound';
 
@@ -57,7 +58,17 @@ export const ErrorRound: React.FC<{ ex: ErrorExample; onNext: () => void; startS
     setStage('done');
     playClear();
     confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-    recordResult({ moduleId: 'error-hunter', skillId: ex.isCorrect ? 'judge-correct' : `fix-${ex.fixKind}`, label: ex.expr, correct: mistakes === 0 });
+    // 誤り例の「正解の理由」は出題側で既知 → つまずきタグの質が最も高い（AI不要）。
+    const reasonTag = !ex.isCorrect && ex.correctReasonIndex >= 0
+      ? reasonToTag(ex.reasonOptions[ex.correctReasonIndex])
+      : undefined;
+    recordResult({
+      moduleId: 'error-hunter',
+      skillId: ex.isCorrect ? 'judge-correct' : `fix-${ex.fixKind}`,
+      label: ex.expr,
+      correct: mistakes === 0,
+      misses: mistakes > 0 ? [{ expected: ex.correctAnswer, tag: reasonTag }] : undefined,
+    });
     onResult?.(mistakes === 0);
   };
 

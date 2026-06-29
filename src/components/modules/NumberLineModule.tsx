@@ -257,7 +257,7 @@ export const CompareActivity: React.FC<{ pair: ComparePair; level: CompareLevel;
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'number-line', skillId: `compare-${level}`, label: `${pair.aStr} ${correct} ${pair.bStr}`, correct: mistakes === 0 });
+      recordResult({ moduleId: 'number-line', skillId: `compare-${level}`, label: `${pair.aStr} ${correct} ${pair.bStr}`, correct: mistakes === 0, misses: mistakes > 0 ? [{ expected: correct, tag: 'compare' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
@@ -351,7 +351,7 @@ const LineActivity: React.FC<{ problem: LineProblem; level: LineLevel; onNext: (
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'number-line', skillId: `line-${level}`, label: `${targetStr} を数直線に`, correct: mistakes === 0 });
+      recordResult({ moduleId: 'number-line', skillId: `line-${level}`, label: `${targetStr} を数直線に`, correct: mistakes === 0, misses: mistakes > 0 ? [{ expected: targetStr, tag: 'numberline' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
@@ -418,7 +418,7 @@ export const LineReadActivity: React.FC<{ problem: LineProblem; level: LineLevel
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'number-line', skillId: `line-read-${level}`, label: `${targetStr} をよむ`, correct: mistakes === 0 });
+      recordResult({ moduleId: 'number-line', skillId: `line-read-${level}`, label: `${targetStr} をよむ`, correct: mistakes === 0, misses: mistakes > 0 ? [{ expected: targetStr, tag: 'numberline' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
@@ -492,7 +492,7 @@ export const OrderActivity: React.FC<{ problem: OrderProblem; level: OrderLevel;
         setSolved(true);
         playClear();
         confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
-        recordResult({ moduleId: 'number-line', skillId: `order-${level}`, label: `${dirLabel}にならべる`, correct: mistakes === 0 });
+        recordResult({ moduleId: 'number-line', skillId: `order-${level}`, label: `${dirLabel}にならべる`, correct: mistakes === 0, misses: mistakes > 0 ? [{ tag: 'numberline' }] : undefined });
         onResult?.(mistakes === 0);
       } else {
         playCorrect();
