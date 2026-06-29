@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Divide, PlusSquare, X, Ruler, LayoutGrid, Search, BookOpen,
-  History, Settings as SettingsIcon, Lock, ClipboardCheck, ChevronRight,
+  History, Settings as SettingsIcon, Lock, ClipboardCheck, ChevronRight, NotebookPen,
 } from 'lucide-react';
 import { MODULES, ModuleMeta } from '../constants';
 import { ModuleId, useProgressStore } from '../store/progressStore';
@@ -18,6 +18,7 @@ interface Props {
   onSelectModule: (id: ModuleId) => void;
   onOpenLog: () => void;
   onStartTest: () => void;
+  onOpenReflect: () => void;
 }
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -73,11 +74,12 @@ const ModuleCard: React.FC<{ m: ModuleMeta; onClick: () => void; cleared: number
   );
 };
 
-export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest }) => {
+export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, onOpenReflect }) => {
   const [showSettings, setShowSettings] = useState(false);
   const getModuleCount = useProgressStore((s) => s.getModuleCount);
   const mastery = useProgressStore((s) => s.mastery);
-  const reviewTargets = getReviewTargets(mastery);
+  const lastReviewedAt = useProgressStore((s) => s.lastReviewedAt);
+  const reviewTargets = getReviewTargets(mastery, 3, lastReviewedAt);
 
   return (
     <div className="w-full h-full overflow-y-auto">
@@ -86,6 +88,13 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest })
         <div className="flex justify-between items-center gap-3 mb-2">
           <GoalRing />
           <div className="flex gap-3">
+          <button
+            onClick={onOpenReflect}
+            className="flex items-center gap-2 bg-surface px-5 py-2.5 rounded-full shadow-sm border border-line text-muted font-bold hover:bg-surface-2 transition-all"
+          >
+            <NotebookPen size={20} />
+            <span>ふりかえり</span>
+          </button>
           <button
             onClick={onOpenLog}
             className="flex items-center gap-2 bg-surface px-5 py-2.5 rounded-full shadow-sm border border-line text-muted font-bold hover:bg-surface-2 transition-all"
@@ -138,7 +147,7 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest })
         {/* ふくしゅうコーナー */}
         {reviewTargets.length > 0 && (
           <div className="mb-6 p-5 rounded-[24px] bg-amber-50 border border-amber-200">
-            <p className="text-sm font-black text-amber-700 mb-3">もう少し れんしゅうしよう</p>
+            <p className="text-sm font-black text-amber-700 mb-3">きょうの ふくしゅう（じかんを あけて もう一度）</p>
             <div className="flex flex-wrap gap-2">
               {reviewTargets.map((t) => (
                 <button

@@ -13,9 +13,11 @@ interface SettingsState {
   theme: Theme;
   fontScale: FontScale;
   soundEnabled: boolean;
+  teacherFormUrl: string; // 先生が設定する「ふりかえり提出」用 Google フォーム URL（空なら提出ボタン非表示）
   setTheme: (t: Theme) => void;
   setFontScale: (s: FontScale) => void;
   toggleSound: () => void;
+  setTeacherFormUrl: (url: string) => void;
 }
 
 export const FONT_SCALE_PX: Record<FontScale, string> = {
@@ -30,9 +32,11 @@ export const useSettingsStore = create<SettingsState>()(
       theme: 'light',
       fontScale: 'normal',
       soundEnabled: true,
+      teacherFormUrl: '',
       setTheme: (theme) => set({ theme }),
       setFontScale: (fontScale) => set({ fontScale }),
       toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
+      setTeacherFormUrl: (teacherFormUrl) => set({ teacherFormUrl }),
     }),
     { name: 'syousu_settings_v1' }
   )
