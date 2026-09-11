@@ -192,7 +192,7 @@ const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () 
     setStage('DONE');
     playClear();
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    recordResult({ moduleId: 'decimal-muldiv', skillId: `mul-${level}`, label: `${problem.a} × ${problem.b}`, correct: mistakes === 0 });
+    recordResult({ moduleId: 'decimal-muldiv', skillId: `mul-${level}`, label: `${problem.a} × ${problem.b}`, correct: mistakes === 0, misses: mistakes > 0 ? [{ tag: 'calc-muldiv' }] : undefined });
     onResult?.(mistakes === 0);
   };
 
@@ -414,6 +414,7 @@ const DivSimulator: React.FC<{ problem: DivProblem; level: DivLevel; onNext: () 
     recordResult({
       moduleId: 'decimal-muldiv', skillId: `div-${level}`,
       label: `${problem.dividend} ÷ ${problem.divisor}`, correct: miss === 0,
+      misses: miss > 0 ? [{ tag: 'calc-muldiv' }] : undefined,
     });
     onResult?.(miss === 0);
   };

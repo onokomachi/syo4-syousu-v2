@@ -8,9 +8,10 @@ import {
   Star, Sparkles, Award, Flame, Crown, Divide, PlusSquare, X, Ruler, LayoutGrid, Search, BookOpen, Lock,
   ChevronDown, ClipboardCheck, Medal, Zap, Target, Rocket, Gem,
 } from 'lucide-react';
-import { useProgressStore, ModuleId } from '../store/progressStore';
+import { useProgressStore, ModuleId, skillToModuleId } from '../store/progressStore';
 import { MODULES } from '../constants';
 import { computeBadges } from '../lib/badges';
+import { missTagLabel } from '../lib/missTags';
 
 interface Props { onBack: () => void; }
 
@@ -29,6 +30,8 @@ export const LogView: React.FC<Props> = ({ onBack }) => {
   const bestTestUra = useProgressStore((s) => s.bestTestUra);
   const bestTestTotal = useProgressStore((s) => s.bestTestTotal);
   const masteredModulesAll = useProgressStore((s) => s.masteredModules);
+  const mastery = useProgressStore((s) => s.mastery);
+  const errorTags = useProgressStore((s) => s.errorTags);
   const [scope, setScope] = React.useState<'all' | 'today'>('all');
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
 
@@ -50,6 +53,30 @@ export const LogView: React.FC<Props> = ({ onBack }) => {
   MODULES.forEach((m) => (masteredModules[m.id] = !!masteredModulesAll[m.id]));
   const badges = computeBadges({ totalCorrect, maxStreak, moduleCounts, bestTestOmote, bestTestUra, bestTestTotal, masteredModules });
   const earnedCount = badges.filter((b) => b.earned).length;
+
+  // ── まちがいマップ（深い学び：メタ認知モニタリング。AIは使わず既存データから可視化）──
+  // コース別の正答率（信号色）。mastery の累計から集計。
+  const moduleAcc = MODULES.map((m) => {
+    let attempts = 0, corrects = 0;
+    for (const [skillId, sm] of Object.entries(mastery)) {
+      if (skillToModuleId(skillId) === m.id) { attempts += sm.attempts; corrects += sm.corrects; }
+    }
+    return { id: m.id, title: m.title, attempts, acc: attempts > 0 ? corrects / attempts : 0 };
+  }).filter((x) => x.attempts > 0).sort((a, b) => a.acc - b.acc);
+  // つまずきの種類の上位（長期傾向カウンタ）。
+  const topTags = Object.entries(errorTags)
+    .map(([tag, count]) => ({ tag, count }))
+    .filter((e) => e.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+  // きょう 誤答が出た問題。
+  const todayMisses = logs.filter((l) => l.ts >= todayTs && (l.misses?.length ?? 0) > 0);
+  const hasMistakeData = moduleAcc.length > 0 || topTags.length > 0 || todayMisses.length > 0;
+
+  const accLight = (acc: number) =>
+    acc >= 0.8 ? { emoji: '🟢', text: 'バッチリ！', color: 'text-emerald-600', bar: 'bg-emerald-500' }
+    : acc >= 0.6 ? { emoji: '🟡', text: 'あと少し', color: 'text-amber-600', bar: 'bg-amber-500' }
+    : { emoji: '🔴', text: 'れんしゅうしよう', color: 'text-rose-500', bar: 'bg-rose-400' };
 
   const moduleTitle = (id: ModuleId) => MODULES.find((m) => m.id === id)?.title ?? (id === 'mock-test' ? 'テスト' : id);
 
@@ -111,6 +138,80 @@ export const LogView: React.FC<Props> = ({ onBack }) => {
               })}
             </div>
           </div>
+
+          {/* まちがいマップ（自分の苦手・つまずきの傾向を可視化＝メタ認知モニタリング） */}
+          {hasMistakeData && (
+            <div className="bg-surface rounded-3xl border border-line shadow-sm p-5 space-y-5">
+              <div className="flex items-center gap-2">
+                <Target size={18} className="text-rose-500" />
+                <span className="text-content text-sm font-black">まちがいマップ</span>
+                <span className="text-faint text-[10px] font-bold">じぶんの にがてを 見つけよう</span>
+              </div>
+
+              {/* コース別 正答率（信号） */}
+              {moduleAcc.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-faint text-[11px] font-black uppercase tracking-widest">コースべつ せいかい率</div>
+                  {moduleAcc.map((m) => {
+                    const light = accLight(m.acc);
+                    return (
+                      <div key={m.id} className="flex items-center gap-3">
+                        <span className="text-lg w-6 text-center shrink-0">{light.emoji}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-bold text-content truncate">{m.title}</span>
+                            <span className={`text-xs font-black tabular-nums shrink-0 ${light.color}`}>{Math.round(m.acc * 100)}%・{light.text}</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-surface-3 mt-1 overflow-hidden">
+                            <div className={`h-full rounded-full ${light.bar}`} style={{ width: `${Math.round(m.acc * 100)}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* つまずきの種類（多い順） */}
+              {topTags.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-faint text-[11px] font-black uppercase tracking-widest">よく ある つまずき</div>
+                  <div className="flex flex-wrap gap-2">
+                    {topTags.map((t) => (
+                      <span key={t.tag} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-black">
+                        {missTagLabel(t.tag)}
+                        <span className="bg-rose-200 text-rose-800 rounded-full px-1.5 tabular-nums">{t.count}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* きょう まちがえた もんだい */}
+              {todayMisses.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-faint text-[11px] font-black uppercase tracking-widest">きょう まちがえた もんだい</div>
+                  <div className="space-y-1.5">
+                    {todayMisses.slice(0, 20).map((l) => (
+                      <div key={l.id} className="flex items-start justify-between gap-2 py-1.5 border-b border-line/40 last:border-0">
+                        <div className="min-w-0">
+                          <span className="px-2 py-0.5 bg-surface-3 text-muted rounded text-[10px] font-black mr-2">{moduleTitle(l.moduleId)}</span>
+                          <span className="text-sm font-bold text-content">{l.label}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1 shrink-0 justify-end">
+                          {(l.misses ?? []).map((mm, i) => (
+                            <span key={i} className="text-[10px] font-bold text-rose-600">
+                              {mm.tag ? missTagLabel(mm.tag) : ''}{mm.expected ? `（正 ${mm.expected}）` : ''}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* バッジ（横一列・横スクロールで全部たしかめられる） */}
           <div>

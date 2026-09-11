@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { motion } from 'motion/react';
-import { X, Sun, Flower2, Terminal, Waves, Sparkles, Stars, Lock, Music, Music2 } from 'lucide-react';
+import { X, Sun, Flower2, Terminal, Waves, Sparkles, Stars, Lock, Music, Music2, Send } from 'lucide-react';
 import { useSettingsStore, Theme, FontScale } from '../store/settingsStore';
 import { useProgressStore } from '../store/progressStore';
 import { MODULES } from '../constants';
@@ -31,7 +31,7 @@ const FONTS: { id: FontScale; label: string; sample: string }[] = [
 ];
 
 export const Settings: React.FC<Props> = ({ onClose }) => {
-  const { theme, fontScale, soundEnabled, setTheme, setFontScale, toggleSound } = useSettingsStore();
+  const { theme, fontScale, soundEnabled, teacherFormUrl, setTheme, setFontScale, toggleSound, setTeacherFormUrl } = useSettingsStore();
 
   // バッジ獲得率（特別テーマの解放判定に使う）
   const totalCorrect = useProgressStore((s) => s.totalCorrect);
@@ -161,6 +161,24 @@ export const Settings: React.FC<Props> = ({ onClose }) => {
               style={{ backgroundColor: '#f8fafc' }}
             />
           </button>
+        </div>
+
+        {/* 先生用：ふりかえり提出フォーム（深い学び／自己調整の提出先） */}
+        <div className="mt-6">
+          <label className="text-xs font-black text-faint uppercase tracking-widest mb-3 flex items-center gap-1.5">
+            <Send size={14} /> 先生用：ふりかえり ていしゅつフォーム
+          </label>
+          <input
+            type="url"
+            inputMode="url"
+            value={teacherFormUrl}
+            onChange={(e) => setTeacherFormUrl(e.target.value.trim())}
+            placeholder="Google フォームの URL を はりつけ"
+            className="w-full p-3 rounded-2xl border-2 border-line bg-surface text-content font-bold focus:border-brand outline-none"
+          />
+          <p className="text-xs text-muted font-medium mt-2">
+            URL を 入れると、ふりかえり画面に「先生に ていしゅつ」ボタンが でます（空なら 非表示）。
+          </p>
         </div>
       </motion.div>
     </motion.div>

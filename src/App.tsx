@@ -14,6 +14,7 @@ import { ErrorHunterModule } from './components/modules/ErrorHunterModule';
 import { WordProblemModule } from './components/modules/WordProblemModule';
 import { MockTestModule } from './components/modules/MockTestModule';
 import { LogView } from './components/LogView';
+import { ReflectionView } from './components/ReflectionView';
 import { ComingSoon } from './components/modules/ComingSoon';
 import { ModuleId } from './store/progressStore';
 import { MODULES } from './constants';
@@ -24,7 +25,7 @@ import { DeepSeaRain } from './components/ui/DeepSeaRain';
 import { AuroraRain } from './components/ui/AuroraRain';
 import { CosmosRain } from './components/ui/CosmosRain';
 
-type View = { kind: 'HUB' } | { kind: 'LOG' } | { kind: 'TEST' } | { kind: 'MODULE'; id: ModuleId };
+type View = { kind: 'HUB' } | { kind: 'LOG' } | { kind: 'REFLECT' } | { kind: 'TEST' } | { kind: 'MODULE'; id: ModuleId };
 
 export default function App() {
   const [view, setView] = useState<View>({ kind: 'HUB' });
@@ -66,7 +67,7 @@ export default function App() {
       <AnimatePresence mode="wait">
         {view.kind === 'HUB' && (
           <motion.div key="hub" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
-            <Hub onSelectModule={(id) => setView({ kind: 'MODULE', id })} onOpenLog={() => setView({ kind: 'LOG' })} onStartTest={() => setView({ kind: 'TEST' })} />
+            <Hub onSelectModule={(id) => setView({ kind: 'MODULE', id })} onOpenLog={() => setView({ kind: 'LOG' })} onStartTest={() => setView({ kind: 'TEST' })} onOpenReflect={() => setView({ kind: 'REFLECT' })} />
           </motion.div>
         )}
 
@@ -85,6 +86,12 @@ export default function App() {
         {view.kind === 'LOG' && (
           <motion.div key="log" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="w-full h-full">
             <LogView onBack={goHub} />
+          </motion.div>
+        )}
+
+        {view.kind === 'REFLECT' && (
+          <motion.div key="reflect" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="w-full h-full">
+            <ReflectionView onBack={goHub} />
           </motion.div>
         )}
       </AnimatePresence>

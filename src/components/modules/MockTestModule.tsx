@@ -9,6 +9,8 @@ import { motion } from 'motion/react';
 import { ChevronLeft, ClipboardCheck, Home, RotateCcw, Trophy } from 'lucide-react';
 import { TEST_STEPS, TestProblem, TestStep, describeProblem, OMOTE_MAX, URA_MAX, TOTAL_MAX } from '../../lib/testConfig';
 import { useProgressStore, TestDetail } from '../../store/progressStore';
+import { useReflectionStore } from '../../store/reflectionStore';
+import { ConfidenceCheck, calibrationMessage } from '../shared/ConfidenceCheck';
 import {
   ComposeActivity, CollectActivity, ScaleActivity, UnitActivity, PlaceIdActivity, DecomposeActivity,
 } from './PlaceValueLab';
@@ -35,7 +37,9 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState<Record<number, boolean>>({}); // index -> ノーミス
   const recordResult = useProgressStore((s) => s.recordResult);
+  const addCalibration = useReflectionStore((s) => s.addCalibration);
   const [recorded, setRecorded] = useState(false);
+  const [predicted, setPredicted] = useState<number | null>(null); // できたつもり（やる前の自己予想）
 
   // 選んだ範囲のステップ
   const activeSteps = useMemo<TestStep[]>(() => stepsForMode(mode), [mode]);
@@ -89,6 +93,10 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
       }),
     };
     recordResult({ moduleId: 'mock-test', skillId: 'mock-test', label: `本番テスト（${mode}）${totalScore}/${totalMax}点`, correct: totalScore === totalMax, detail });
+    // できたつもりチェック：予想していれば 実際（得点率）とのズレを記録（メタ認知キャリブレーション）
+    if (predicted !== null && totalMax > 0) {
+      addCalibration({ skillId: 'mock-test', predicted, actual: totalScore / totalMax });
+    }
     setRecorded(true);
   }
 
@@ -112,6 +120,9 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
             <h1 className="text-3xl font-black text-content mb-2">本番テストモード</h1>
             <p className="text-muted font-bold leading-relaxed mb-2">「5. 小数のしくみ」の テストに ちょうせん！</p>
             <p className="text-faint font-bold text-sm mb-6">どこに ちょうせんする？ 範囲を えらんでね。まちがえても 正しい こたえまで すすめるよ。一発で 正解できると 点が もらえるよ。</p>
+            <div className="mb-6 text-left bg-surface-2 rounded-2xl border border-line p-4">
+              <ConfidenceCheck value={predicted} onChange={setPredicted} label="はじめる前に：きょうは どれくらい できそう？" />
+            </div>
             <div className="flex flex-wrap gap-3">
               <RangeButton m="表" title="表だけ" sub="知識・ぎのう" max={OMOTE_MAX} color="border-blue-300 hover:border-blue-400 bg-blue-50/40" />
               <RangeButton m="裏" title="裏だけ" sub="考える力（参考つき）" max={URA_MAX} color="border-rose-300 hover:border-rose-400 bg-rose-50/40" />
@@ -154,6 +165,14 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
                 {uraMax > 0 && <span className="px-4 py-1.5 rounded-full bg-rose-50 text-rose-600 font-black text-sm">裏 {uraScore}/{uraMax}</span>}
               </div>
             </div>
+
+            {/* できたつもり vs けっか（メタ認知キャリブレーション） */}
+            {predicted !== null && totalMax > 0 && (
+              <div className="rounded-2xl border border-line bg-surface-2 p-4 mb-3 text-center">
+                <p className="text-xs font-black text-faint mb-1">できたつもり チェック</p>
+                <p className="text-sm font-bold text-content">{calibrationMessage(predicted, totalScore / totalMax)}</p>
+              </div>
+            )}
 
             {omoteSteps.length > 0 && (
               <div className="rounded-2xl border border-line p-4 mb-3">

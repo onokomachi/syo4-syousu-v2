@@ -52,6 +52,7 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
   const [stage, setStage] = useState<'shiki' | 'calc' | 'done'>('shiki');
   const [pickedWrong, setPickedWrong] = useState<number | null>(null);
   const [mistakes, setMistakes] = useState(0);
+  const [wrongAnswers, setWrongAnswers] = useState<string[]>([]); // まちがえた答え（まちがいマップ用）
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
 
@@ -73,12 +74,19 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
     if (Number(v) === Number(problem.answer)) {
       playClear();
       confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'word-problem', skillId: `wp-${problem.op}`, label: problem.text.slice(0, 18) + '…', correct: mistakes === 0 });
+      recordResult({
+        moduleId: 'word-problem', skillId: `wp-${problem.op}`,
+        label: problem.text.slice(0, 18) + '…', correct: mistakes === 0,
+        misses: mistakes > 0
+          ? [{ wrong: wrongAnswers.join('・') || undefined, expected: String(problem.answer), tag: 'wordproblem' }]
+          : undefined,
+      });
       onResult?.(mistakes === 0);
       setStage('done');
     } else {
       playSoftTry();
       setMistakes((m) => m + 1);
+      setWrongAnswers((w) => [...w, v]);
       setHint(`しきは ${problem.a} ${problem.op} ${problem.b} だね。もう一度 計算してみよう。`);
     }
   };

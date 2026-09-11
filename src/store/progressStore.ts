@@ -40,6 +40,13 @@ export interface TestDetail {
   steps: TestStepResult[];
 }
 
+/** その問題で起きた誤答1件分（まちがいマップ・振り返りに使う）。AIは使わず児童の入力値をそのまま保持。 */
+export interface MissDetail {
+  wrong?: string; // 児童が実際に入力した（まちがった）値。1問ずつ digit 入力で都度はじく問題では空のことがある
+  expected?: string; // 正しい答え（分かる場合）
+  tag?: string; // つまずきの種類タグ（例: 'point' 小数点 / 'megz' / 'borrow'。ErrorHunter は理由カテゴリ）
+}
+
 export interface ResultRecord {
   id: string;
   ts: number;
@@ -47,6 +54,7 @@ export interface ResultRecord {
   skillId: string; // 例: 'addsub-diff-digits', 'compare', 'muldiv-remainder'
   label: string; // 履歴表示用（例: "3.5 + 4.18"）
   correct: boolean; // ノーミスで完答できたか
+  misses?: MissDetail[]; // その回に出た誤答（あれば）。まちがいマップの「今日まちがえた問題」に使う
   detail?: TestDetail; // 本番テストのときだけ。各設問の問題・正答・○×
 }
 
@@ -56,8 +64,8 @@ export interface SkillMastery {
   perfectStreak?: number; // 連続ノーミス数（熟達バー表示用。ミスで0にリセット）
 }
 
-/** skillId のプレフィックスから所属モジュールを判定（累計カウンタの移行用） */
-function skillToModuleId(skillId: string): ModuleId | null {
+/** skillId のプレフィックスから所属モジュールを判定（累計カウンタの移行・まちがいマップ集計用） */
+export function skillToModuleId(skillId: string): ModuleId | null {
   if (skillId === 'mock-test' || skillId.startsWith('mock-')) return 'mock-test';
   if (skillId.startsWith('addsub-')) return 'decimal-addsub';
   if (skillId.startsWith('mul-') || skillId.startsWith('div-') || skillId.startsWith('muldiv-')) return 'decimal-muldiv';
@@ -77,6 +85,10 @@ interface ProgressState {
   // 累計カウンタ（logs は直近200件で打ち切るため、総数はこちらで保持して頭打ちを防ぐ）
   totalCorrect: number;
   moduleCounts: Partial<Record<ModuleId, number>>;
+  // つまずき傾向の累計カウンタ（logs キャップに依存しない長期傾向。まちがいマップで上位を表示）
+  errorTags: Record<string, number>;
+  // スキル別「最後に復習（出題）した時刻」。分散反復（spacing）の優先度づけに使う
+  lastReviewedAt: Record<string, number>;
   // 本番テストの自己ベスト得点（バッジ判定用。表/裏/両面それぞれの最高点）
   bestTestOmote: number;
   bestTestUra: number;
@@ -85,6 +97,8 @@ interface ProgressState {
   // perfectStreak はミスで0に戻るが、この記録は永続（バッジ用なので消えない）。
   masteredModules: Partial<Record<ModuleId, boolean>>;
   recordResult: (rec: Omit<ResultRecord, 'id' | 'ts'>) => void;
+  getTopErrorTags: (n?: number) => { tag: string; count: number }[]; // つまずき傾向の上位
+  getTodayMisses: () => ResultRecord[]; // きょう 誤答が出た回（まちがいマップ用）
   getMastery: (skillId: string) => number; // 0..1（試行なしは 0）
   getMasteryStreak: (skillId: string) => number; // 0..1（連続ノーミス/5。熟達バー表示用）
   getModuleCount: (moduleId: ModuleId) => number;
@@ -104,6 +118,8 @@ export const useProgressStore = create<ProgressState>()(
       dailyGoal: 10,
       totalCorrect: 0,
       moduleCounts: {},
+      errorTags: {},
+      lastReviewedAt: {},
       bestTestOmote: 0,
       bestTestUra: 0,
       bestTestTotal: 0,
@@ -144,6 +160,15 @@ export const useProgressStore = create<ProgressState>()(
             ? { ...state.moduleCounts, [rec.moduleId]: (state.moduleCounts[rec.moduleId] ?? 0) + 1 }
             : state.moduleCounts;
 
+          // つまずき傾向の累計（誤答に tag があれば加算）。logs キャップに依存しない長期カウンタ。
+          const errorTags = { ...state.errorTags };
+          for (const m of rec.misses ?? []) {
+            if (m.tag) errorTags[m.tag] = (errorTags[m.tag] ?? 0) + 1;
+          }
+
+          // 分散反復用：このスキルを「今 出題した」時刻として記録
+          const lastReviewedAt = { ...state.lastReviewedAt, [rec.skillId]: entry.ts };
+
           // 本番テストの自己ベスト得点を更新（その範囲に含まれたセクションのみ）
           let bestTestOmote = state.bestTestOmote;
           let bestTestUra = state.bestTestUra;
@@ -155,8 +180,22 @@ export const useProgressStore = create<ProgressState>()(
             if (rec.detail.omoteMax > 0 && rec.detail.uraMax > 0) bestTestTotal = Math.max(bestTestTotal, rec.detail.total);
           }
 
-          return { logs, mastery, currentStreak, maxStreak, totalCorrect, moduleCounts, bestTestOmote, bestTestUra, bestTestTotal, masteredModules };
+          return { logs, mastery, currentStreak, maxStreak, totalCorrect, moduleCounts, errorTags, lastReviewedAt, bestTestOmote, bestTestUra, bestTestTotal, masteredModules };
         });
+      },
+
+      getTopErrorTags: (n = 5) =>
+        Object.entries(get().errorTags)
+          .map(([tag, count]) => ({ tag, count }))
+          .filter((e) => e.count > 0)
+          .sort((a, b) => b.count - a.count)
+          .slice(0, n),
+
+      getTodayMisses: () => {
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        const t = start.getTime();
+        return get().logs.filter((l) => l.ts >= t && (l.misses?.length ?? 0) > 0);
       },
 
       getMastery: (skillId) => {
@@ -188,11 +227,11 @@ export const useProgressStore = create<ProgressState>()(
 
       setDailyGoal: (n) => set({ dailyGoal: n }),
 
-      reset: () => set({ logs: [], mastery: {}, currentStreak: 0, maxStreak: 0, totalCorrect: 0, moduleCounts: {}, bestTestOmote: 0, bestTestUra: 0, bestTestTotal: 0, masteredModules: {} }),
+      reset: () => set({ logs: [], mastery: {}, currentStreak: 0, maxStreak: 0, totalCorrect: 0, moduleCounts: {}, errorTags: {}, lastReviewedAt: {}, bestTestOmote: 0, bestTestUra: 0, bestTestTotal: 0, masteredModules: {} }),
     }),
     {
       name: 'syousu_progress_v1',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => getProgressStorage()),
       // v0→v1: 累計カウンタを mastery（打ち切られない corrects）から復元する。
       // v1→v2: 本番テストの自己ベスト得点を、残っている logs の detail から復元する。
@@ -236,6 +275,11 @@ export const useProgressStore = create<ProgressState>()(
             }
           }
           state.masteredModules = masteredModules;
+        }
+        if (state && version < 4) {
+          // 深い学び機能の追加。既存ユーザーは空の傾向カウンタ・復習時刻で開始する。
+          state.errorTags = state.errorTags ?? {};
+          state.lastReviewedAt = state.lastReviewedAt ?? {};
         }
         return state as ProgressState;
       },
