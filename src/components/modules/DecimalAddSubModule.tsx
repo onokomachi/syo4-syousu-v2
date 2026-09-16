@@ -7,6 +7,7 @@
  *  - 1桁ずつ右から確認するやさしいフィードバック（タイマー無し）
  */
 import React, { useMemo, useState } from 'react';
+import { useRoundRecorder } from 'learning-app-kit/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, RotateCcw, Lightbulb, CheckCircle2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -206,6 +207,13 @@ export const AddSubSimulator: React.FC<SimProps> = ({ problem, level, buildMode 
   const [placedB, setPlacedB] = useState<Record<number, string>>({});
 
   const recordResult = useProgressStore((s) => s.recordResult);
+  // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
+  const rec = useRoundRecorder({
+    moduleId: 'decimal-addsub',
+    skillId: buildMode ? `addsub-build-${level}` : `addsub-${level}`,
+    record: recordResult,
+    abandonLabel: () => `${problem.a} ${problem.op} ${problem.b}`,
+  });
 
   // 置くべき桁（高い位→低い位）
   const digitsA = useMemo(() => model.rowA.filter((c) => c.kind === 'digit').sort((x, y) => y.place - x.place), [model]);
@@ -245,7 +253,7 @@ export const AddSubSimulator: React.FC<SimProps> = ({ problem, level, buildMode 
   };
   const placeError = () => {
     playSoftTry();
-    setMistakes((m) => m + 1);
+    setMistakes((m) => m + 1); rec.mistake();
     setShakePlace(stage === 'A' ? (nextDigitA?.place ?? null) : (nextDigitB?.place ?? null));
     setTimeout(() => setShakePlace(null), 450);
     setHint('小数点を そろえて、同じ位どうしを たてに そろえよう。一の位は 小数点の すぐ左だよ。');
@@ -278,7 +286,7 @@ export const AddSubSimulator: React.FC<SimProps> = ({ problem, level, buildMode 
       else playCorrect();
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setShakePlace(activePlace);
       setTimeout(() => setShakePlace(null), 450);
       const aCell = model.rowA.find((c) => c.place === activePlace);
@@ -305,13 +313,7 @@ export const AddSubSimulator: React.FC<SimProps> = ({ problem, level, buildMode 
     setFinished(true);
     playClear();
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    recordResult({
-      moduleId: 'decimal-addsub',
-      skillId: buildMode ? `addsub-build-${level}` : `addsub-${level}`,
-      label: `${problem.a} ${problem.op} ${problem.b}`,
-      mistakes: mistakes, correct: mistakes === 0,
-      misses: mistakes > 0 ? [{ tag: 'calc-addsub' }] : undefined,
-    });
+    rec.finish(`${problem.a} ${problem.op} ${problem.b}`);
     onResult?.(mistakes === 0);
   };
 

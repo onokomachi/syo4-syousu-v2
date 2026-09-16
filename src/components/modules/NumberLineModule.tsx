@@ -5,6 +5,7 @@
  * タイマー無し・やさしいフィードバック・読み上げ（資料の低位児最適化）。
  */
 import React, { useMemo, useState } from 'react';
+import { useRoundRecorder } from 'learning-app-kit/react';
 import { motion } from 'motion/react';
 import { ChevronLeft, RotateCcw, Lightbulb, Ruler, Scale } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -240,6 +241,13 @@ export const CompareActivity: React.FC<{ pair: ComparePair; level: CompareLevel;
   const [solved, setSolved] = useState(false);
   const [mistakes, setMistakes] = useState(0);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
+  const rec = useRoundRecorder({
+    moduleId: 'number-line',
+    skillId: `compare-${level}`,
+    record: recordResult,
+    abandonLabel: () => `${pair.aStr} ${correct} ${pair.bStr}`,
+  });
 
   const maxVal = Math.max(a, b);
   const lineCfg = maxVal <= 1
@@ -257,11 +265,11 @@ export const CompareActivity: React.FC<{ pair: ComparePair; level: CompareLevel;
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'number-line', skillId: `compare-${level}`, label: `${pair.aStr} ${correct} ${pair.bStr}`, mistakes: mistakes, correct: mistakes === 0, misses: mistakes > 0 ? [{ expected: correct, tag: 'compare' }] : undefined });
+      rec.finish(`${pair.aStr} ${correct} ${pair.bStr}`);
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
     }
   };
 
@@ -343,6 +351,13 @@ const LineActivity: React.FC<{ problem: LineProblem; level: LineLevel; onNext: (
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
+  const rec = useRoundRecorder({
+    moduleId: 'number-line',
+    skillId: `line-${level}`,
+    record: recordResult,
+    abandonLabel: () => `${targetStr} を数直線に`,
+  });
 
   const pick = (v: number) => {
     if (solved) return;
@@ -351,11 +366,11 @@ const LineActivity: React.FC<{ problem: LineProblem; level: LineLevel; onNext: (
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'number-line', skillId: `line-${level}`, label: `${targetStr} を数直線に`, mistakes: mistakes, correct: mistakes === 0, misses: mistakes > 0 ? [{ expected: targetStr, tag: 'numberline' }] : undefined });
+      rec.finish(`${targetStr} を数直線に`);
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       const mid = (min + max) / 2;
       setHint(target < mid ? `まんなか(${Number(mid.toFixed(1))})より 左をさがそう。` : `まんなか(${Number(mid.toFixed(1))})より 右をさがそう。`);
     }
@@ -411,6 +426,13 @@ export const LineReadActivity: React.FC<{ problem: LineProblem; level: LineLevel
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
+  const rec = useRoundRecorder({
+    moduleId: 'number-line',
+    skillId: `line-read-${level}`,
+    record: recordResult,
+    abandonLabel: () => `${targetStr} をよむ`,
+  });
 
   const submit = (v: string) => {
     if (solved) return;
@@ -418,11 +440,11 @@ export const LineReadActivity: React.FC<{ problem: LineProblem; level: LineLevel
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'number-line', skillId: `line-read-${level}`, label: `${targetStr} をよむ`, mistakes: mistakes, correct: mistakes === 0, misses: mistakes > 0 ? [{ expected: targetStr, tag: 'numberline' }] : undefined });
+      rec.finish(`${targetStr} をよむ`);
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setHint(`◆の ところの めもりを よく見よう。${min} と ${max} の あいだだよ。`);
     }
   };
@@ -478,6 +500,13 @@ export const OrderActivity: React.FC<{ problem: OrderProblem; level: OrderLevel;
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
+  const rec = useRoundRecorder({
+    moduleId: 'number-line',
+    skillId: `order-${level}`,
+    record: recordResult,
+    abandonLabel: () => `${dirLabel}にならべる`,
+  });
 
   const remaining = items.filter((it) => !placed.includes(it));
   const dirLabel = dir === 'asc' ? '小さい順（左がいちばん小さい）' : '大きい順（左がいちばん大きい）';
@@ -492,14 +521,14 @@ export const OrderActivity: React.FC<{ problem: OrderProblem; level: OrderLevel;
         setSolved(true);
         playClear();
         confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
-        recordResult({ moduleId: 'number-line', skillId: `order-${level}`, label: `${dirLabel}にならべる`, mistakes: mistakes, correct: mistakes === 0, misses: mistakes > 0 ? [{ tag: 'numberline' }] : undefined });
+        rec.finish(`${dirLabel}にならべる`);
         onResult?.(mistakes === 0);
       } else {
         playCorrect();
       }
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setHint(dir === 'asc'
         ? 'いちばん 小さい数から えらぼう。けたの 長さでなく、上の位から くらべてね。'
         : 'いちばん 大きい数から えらぼう。けたの 長さでなく、上の位から くらべてね。');

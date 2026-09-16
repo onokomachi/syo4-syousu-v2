@@ -5,6 +5,7 @@
  * 既存 DivisionSimulator の見た目／グリッド配置・採点演出のパターンと共通部品を再利用する。
  */
 import React, { useMemo, useState } from 'react';
+import { useRoundRecorder } from 'learning-app-kit/react';
 import { motion } from 'motion/react';
 import { ChevronLeft, RotateCcw, Lightbulb, X as XIcon, Divide } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -170,6 +171,13 @@ const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () 
   const [hint, setHint] = useState<string | null>(null);
   const [shakeCol, setShakeCol] = useState<number | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
+  const rec = useRoundRecorder({
+    moduleId: 'decimal-muldiv',
+    skillId: `mul-${level}`,
+    record: recordResult,
+    abandonLabel: () => `${problem.a} × ${problem.b}`,
+  });
 
   const rightAlign = (str: string): string[] => {
     const arr = Array(totalCols).fill('');
@@ -192,7 +200,7 @@ const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () 
     setStage('DONE');
     playClear();
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    recordResult({ moduleId: 'decimal-muldiv', skillId: `mul-${level}`, label: `${problem.a} × ${problem.b}`, mistakes: mistakes, correct: mistakes === 0, misses: mistakes > 0 ? [{ tag: 'calc-muldiv' }] : undefined });
+    rec.finish(`${problem.a} × ${problem.b}`);
     onResult?.(mistakes === 0);
   };
 
@@ -219,7 +227,7 @@ const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () 
     } else {
       // 2桁入れても一の位が合わない＝まちがい。
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setBuffer('');
       setShakeCol(activeCol); setTimeout(() => setShakeCol(null), 450);
       setHint('一の位の 数字を 入れてね。くり上がりが あるときは 2けた 入れると、十の位が 左の上に 小さく出るよ。');
@@ -239,7 +247,7 @@ const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () 
   const placePoint = (gap: number) => {
     if (stage !== 'POINT') return;
     if (gap === expectedPointGap) { finish(); }
-    else { setMistakes((m) => m + 1); setHint(`小数点より下の数字は ${decimals}こだよ。右から ${decimals}こ 数えてみよう。`); }
+    else { setMistakes((m) => m + 1); rec.mistake(); setHint(`小数点より下の数字は ${decimals}こだよ。右から ${decimals}こ 数えてみよう。`); }
   };
   const reset = () => { setAnswers({}); setBuffer(''); setCarries({}); setStage('DIGITS'); setMistakes(0); setHint(null); };
 

@@ -4,6 +4,7 @@
  * 失敗は責めず、ヒントで支える（誤り例＋自己説明, エビレベルII）。
  */
 import React, { useState } from 'react';
+import { useRoundRecorder } from 'learning-app-kit/react';
 import { motion } from 'motion/react';
 import { ChevronLeft, RotateCcw, Lightbulb, Search, Check, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -53,6 +54,13 @@ export const ErrorRound: React.FC<{ ex: ErrorExample; onNext: () => void; startS
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
+  const rec = useRoundRecorder({
+    moduleId: 'error-hunter',
+    skillId: ex.isCorrect ? 'judge-correct' : `fix-${ex.fixKind}`,
+    record: recordResult,
+    abandonLabel: () => ex.expr,
+  });
 
   const finish = () => {
     setStage('done');
@@ -62,13 +70,7 @@ export const ErrorRound: React.FC<{ ex: ErrorExample; onNext: () => void; startS
     const reasonTag = !ex.isCorrect && ex.correctReasonIndex >= 0
       ? reasonToTag(ex.reasonOptions[ex.correctReasonIndex])
       : undefined;
-    recordResult({
-      moduleId: 'error-hunter',
-      skillId: ex.isCorrect ? 'judge-correct' : `fix-${ex.fixKind}`,
-      label: ex.expr,
-      mistakes: mistakes, correct: mistakes === 0,
-      misses: mistakes > 0 ? [{ expected: ex.correctAnswer, tag: reasonTag }] : undefined,
-    });
+    rec.finish(ex.expr);
     onResult?.(mistakes === 0);
   };
 
@@ -79,22 +81,22 @@ export const ErrorRound: React.FC<{ ex: ErrorExample; onNext: () => void; startS
       else setStage('fix'); // まちがいを「まちがい」と見ぬけた
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setHint(ex.isCorrect ? 'もう一度 よく見て。この式は 合っているかな？' : 'もう一度 よく見て。どこかに まちがいが あるよ。');
     }
   };
 
   const submitFix = (v: string) => {
     if (Number(v) === Number(ex.correctAnswer)) setStage('reason');
-    else { playSoftTry(); setMistakes((m) => m + 1); setHint('正しい 答えを もう一度 計算してみよう。小数点の いちに 気をつけて。'); }
+    else { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint('正しい 答えを もう一度 計算してみよう。小数点の いちに 気をつけて。'); }
   };
   const submitSign = (s: string) => {
     if (s === ex.correctAnswer) setStage('reason');
-    else { playSoftTry(); setMistakes((m) => m + 1); setHint('数直線で 考えよう。右にあるほうが 大きいよ。'); }
+    else { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint('数直線で 考えよう。右にあるほうが 大きいよ。'); }
   };
   const chooseReason = (i: number) => {
     if (i === ex.correctReasonIndex) finish();
-    else { playSoftTry(); setMistakes((m) => m + 1); setHint('うーん、ちがうみたい。どんな まちがいだったか もう一度 考えよう。'); }
+    else { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint('うーん、ちがうみたい。どんな まちがいだったか もう一度 考えよう。'); }
   };
 
   return (
