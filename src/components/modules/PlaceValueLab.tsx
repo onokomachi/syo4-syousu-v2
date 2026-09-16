@@ -133,7 +133,7 @@ export const ComposeActivity: React.FC<{ problem: ComposeProblem; level: Compose
       setSolved(true);
       playClear();
       confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: `compose-${level}`, label: `${problem.target} をつくる`, correct: true, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: `compose-${level}`, label: `${problem.target} をつくる`, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else { playSoftTry(); setWrong(true); setMistakes((m) => m + 1); }
   };
@@ -204,7 +204,7 @@ export const CollectActivity: React.FC<{ problem: CollectProblem; level: Collect
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: `collect-${level}`, label: question, correct: true, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: `collect-${level}`, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
@@ -254,7 +254,7 @@ export const ScaleActivity: React.FC<{ problem: ScaleProblem; level: ScaleLevel;
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: `scale-${level}`, label: question, correct: true, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: `scale-${level}`, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
@@ -301,7 +301,7 @@ export const UnitActivity: React.FC<{ problem: UnitProblem; level: UnitLevel; on
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: `unit-${level}`, label: question, correct: true, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: `unit-${level}`, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
@@ -352,7 +352,7 @@ export const PlaceIdActivity: React.FC<{ problem: PlaceIdProblem; level: PlaceId
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: `placeid-${level}`, label: question, correct: true, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: `placeid-${level}`, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
@@ -410,7 +410,7 @@ export const DecomposeActivity: React.FC<{ problem: DecomposeProblem; onNext: ()
       setSolved(true);
       playClear();
       confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: 'decompose-3', label: `${problem.valueStr} を分解`, correct: true, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: 'decompose-3', label: `${problem.valueStr} を分解`, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else { playSoftTry(); setWrong(true); setMistakes((m) => m + 1); }
   };

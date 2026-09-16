@@ -309,7 +309,7 @@ export const AddSubSimulator: React.FC<SimProps> = ({ problem, level, buildMode 
       moduleId: 'decimal-addsub',
       skillId: buildMode ? `addsub-build-${level}` : `addsub-${level}`,
       label: `${problem.a} ${problem.op} ${problem.b}`,
-      correct: mistakes === 0,
+      mistakes: mistakes, correct: mistakes === 0,
       misses: mistakes > 0 ? [{ tag: 'calc-addsub' }] : undefined,
     });
     onResult?.(mistakes === 0);
@@ -665,7 +665,7 @@ export const AddSubMasterSimulator: React.FC<MasterProps> = ({ problem, level, o
         moduleId: 'decimal-addsub',
         skillId: `addsub-master-${level}`,
         label: `${problem.a} ${problem.op} ${problem.b}`,
-        correct: perfect,
+        mistakes: mistakes, correct: perfect,
         misses: perfect ? undefined : [{ tag: 'calc-addsub' }],
       });
       onResult?.(perfect);
