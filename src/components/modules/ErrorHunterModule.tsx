@@ -66,7 +66,7 @@ export const ErrorRound: React.FC<{ ex: ErrorExample; onNext: () => void; startS
       moduleId: 'error-hunter',
       skillId: ex.isCorrect ? 'judge-correct' : `fix-${ex.fixKind}`,
       label: ex.expr,
-      correct: mistakes === 0,
+      mistakes: mistakes, correct: mistakes === 0,
       misses: mistakes > 0 ? [{ expected: ex.correctAnswer, tag: reasonTag }] : undefined,
     });
     onResult?.(mistakes === 0);

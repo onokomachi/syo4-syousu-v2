@@ -76,7 +76,7 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
       confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
       recordResult({
         moduleId: 'word-problem', skillId: `wp-${problem.op}`,
-        label: problem.text.slice(0, 18) + '…', correct: mistakes === 0,
+        label: problem.text.slice(0, 18) + '…', mistakes: mistakes, correct: mistakes === 0,
         misses: mistakes > 0
           ? [{ wrong: wrongAnswers.join('・') || undefined, expected: String(problem.answer), tag: 'wordproblem' }]
           : undefined,
