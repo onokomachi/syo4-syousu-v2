@@ -4,6 +4,7 @@
  * TTS・イラスト(絵文字)で読解負荷を相殺。表面語に つられない練習。
  */
 import React, { useState } from 'react';
+import { useRoundRecorder } from 'learning-app-kit/react';
 import { motion } from 'motion/react';
 import { ChevronLeft, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -55,6 +56,13 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
   const [wrongAnswers, setWrongAnswers] = useState<string[]>([]); // まちがえた答え（まちがいマップ用）
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
+  const rec = useRoundRecorder({
+    moduleId: 'word-problem',
+    skillId: `wp-${problem.op}`,
+    record: recordResult,
+    abandonLabel: () => problem.text.slice(0, 18) + '…',
+  });
 
   const chooseShiki = (i: number) => {
     if (i === problem.correctIndex) {
@@ -64,7 +72,7 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
       setStage('calc');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setPickedWrong(i);
       setHint('ようすを 思いうかべよう。「あわせる/のこり/1つ分のいくつ分/同じに分ける」の どれかな？');
     }
@@ -74,18 +82,12 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
     if (Number(v) === Number(problem.answer)) {
       playClear();
       confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
-      recordResult({
-        moduleId: 'word-problem', skillId: `wp-${problem.op}`,
-        label: problem.text.slice(0, 18) + '…', mistakes: mistakes, correct: mistakes === 0,
-        misses: mistakes > 0
-          ? [{ wrong: wrongAnswers.join('・') || undefined, expected: String(problem.answer), tag: 'wordproblem' }]
-          : undefined,
-      });
+      rec.finish(problem.text.slice(0, 18) + '…');
       onResult?.(mistakes === 0);
       setStage('done');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setWrongAnswers((w) => [...w, v]);
       setHint(`しきは ${problem.a} ${problem.op} ${problem.b} だね。もう一度 計算してみよう。`);
     }
