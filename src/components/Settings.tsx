@@ -10,6 +10,7 @@ import { useProgressStore } from '../store/progressStore';
 import { MODULES } from '../constants';
 import { badgeRatio } from '../lib/badges';
 import { THEME_UNLOCK, isThemeUnlocked } from '../lib/themeUnlock';
+import { JoinSettingsRow } from 'learning-app-kit/react';
 
 interface Props {
   onClose: () => void;
@@ -55,6 +56,12 @@ export const Settings: React.FC<Props> = ({ onClose }) => {
   // （blur や暗幕で背景がにじまないようにする）。
   const neonThemes: Theme[] = ['dark', 'deep', 'aurora', 'cosmos'];
   const overlayCls = neonThemes.includes(theme) ? 'bg-black/20' : 'bg-slate-900/40 backdrop-blur-sm';
+
+/** 学級ポータルへの接続。設定していないアプリでは名乗りの画面そのものが出ない。 */
+const PORTAL = {
+  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+  supabaseKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+};
 
   return (
     <motion.div
@@ -180,6 +187,9 @@ export const Settings: React.FC<Props> = ({ onClose }) => {
             URL を 入れると、ふりかえり画面に「先生に ていしゅつ」ボタンが でます（空なら 非表示）。
           </p>
         </div>
+
+        {/* 学級ポータル。コードを入れなくても全部つかえる（他の学級の子もいるため） */}
+        <JoinSettingsRow config={PORTAL} />
       </motion.div>
     </motion.div>
   );
