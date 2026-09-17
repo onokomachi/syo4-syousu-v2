@@ -191,9 +191,11 @@ interface SimProps {
   buildMode?: boolean;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
 }
 
-export const AddSubSimulator: React.FC<SimProps> = ({ problem, level, buildMode = false, onNext, onResult }) => {
+export const AddSubSimulator: React.FC<SimProps> = ({ problem, level, buildMode = false, onNext, onResult, onMiss }) => {
   const model = useMemo(() => buildColumns(problem), [problem]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [finished, setFinished] = useState(false);
@@ -253,7 +255,7 @@ export const AddSubSimulator: React.FC<SimProps> = ({ problem, level, buildMode 
   };
   const placeError = () => {
     playSoftTry();
-    setMistakes((m) => m + 1); rec.mistake();
+    setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
     setShakePlace(stage === 'A' ? (nextDigitA?.place ?? null) : (nextDigitB?.place ?? null));
     setTimeout(() => setShakePlace(null), 450);
     setHint('小数点を そろえて、同じ位どうしを たてに そろえよう。一の位は 小数点の すぐ左だよ。');
@@ -286,7 +288,7 @@ export const AddSubSimulator: React.FC<SimProps> = ({ problem, level, buildMode 
       else playCorrect();
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setShakePlace(activePlace);
       setTimeout(() => setShakePlace(null), 450);
       const aCell = model.rowA.find((c) => c.place === activePlace);
@@ -550,6 +552,8 @@ interface MasterProps {
   level: AddSubLevel;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
 }
 
 const BUILD_CELL = 48;

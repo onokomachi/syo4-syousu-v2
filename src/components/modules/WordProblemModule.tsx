@@ -49,7 +49,7 @@ export const WordProblemModule: React.FC<Props> = ({ onExit }) => {
   );
 };
 
-export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, onNext, onResult }) => {
+export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, onNext, onResult, onMiss }) => {
   const [stage, setStage] = useState<'shiki' | 'calc' | 'done'>('shiki');
   const [pickedWrong, setPickedWrong] = useState<number | null>(null);
   const [mistakes, setMistakes] = useState(0);
@@ -72,7 +72,7 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
       setStage('calc');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); onMiss?.(); rec.mistake();
       setPickedWrong(i);
       setHint('ようすを 思いうかべよう。「あわせる/のこり/1つ分のいくつ分/同じに分ける」の どれかな？');
     }
@@ -87,7 +87,7 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
       setStage('done');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); onMiss?.(); rec.mistake();
       setWrongAnswers((w) => [...w, v]);
       setHint(`しきは ${problem.a} ${problem.op} ${problem.b} だね。もう一度 計算してみよう。`);
     }

@@ -234,7 +234,7 @@ const NumberLine: React.FC<NumberLineProps> = ({ min, max, step, majorEvery, mar
 
 const REL_LABEL: Record<string, string> = { '>': 'A は B より 大きい', '<': 'A は B より 小さい', '=': 'A と B は 等しい' };
 
-export const CompareActivity: React.FC<{ pair: ComparePair; level: CompareLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ pair, level, onNext, onResult }) => {
+export const CompareActivity: React.FC<{ pair: ComparePair; level: CompareLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ pair, level, onNext, onResult, onMiss }) => {
   const correct = relation(pair.aStr, pair.bStr);
   const a = Number(pair.aStr), b = Number(pair.bStr);
   const [picked, setPicked] = useState<'>' | '<' | '=' | null>(null);
@@ -269,7 +269,7 @@ export const CompareActivity: React.FC<{ pair: ComparePair; level: CompareLevel;
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); onMiss?.(); rec.mistake();
     }
   };
 
@@ -344,7 +344,7 @@ export const CompareActivity: React.FC<{ pair: ComparePair; level: CompareLevel;
 
 /* ===================== 数直線におく ===================== */
 
-const LineActivity: React.FC<{ problem: LineProblem; level: LineLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, level, onNext, onResult }) => {
+const LineActivity: React.FC<{ problem: LineProblem; level: LineLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const { target, targetStr, min, max, step, majorEvery } = problem;
   const [picked, setPicked] = useState<number | null>(null);
   const [solved, setSolved] = useState(false);
@@ -370,7 +370,7 @@ const LineActivity: React.FC<{ problem: LineProblem; level: LineLevel; onNext: (
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); onMiss?.(); rec.mistake();
       const mid = (min + max) / 2;
       setHint(target < mid ? `まんなか(${Number(mid.toFixed(1))})より 左をさがそう。` : `まんなか(${Number(mid.toFixed(1))})より 右をさがそう。`);
     }
@@ -420,7 +420,7 @@ const LineActivity: React.FC<{ problem: LineProblem; level: LineLevel; onNext: (
 
 /* ===================== 数直線をよむ（数を答える） ===================== */
 
-export const LineReadActivity: React.FC<{ problem: LineProblem; level: LineLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, level, onNext, onResult }) => {
+export const LineReadActivity: React.FC<{ problem: LineProblem; level: LineLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const { target, targetStr, min, max, step, majorEvery } = problem;
   const [solved, setSolved] = useState(false);
   const [mistakes, setMistakes] = useState(0);
@@ -444,7 +444,7 @@ export const LineReadActivity: React.FC<{ problem: LineProblem; level: LineLevel
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); onMiss?.(); rec.mistake();
       setHint(`◆の ところの めもりを よく見よう。${min} と ${max} の あいだだよ。`);
     }
   };
@@ -493,7 +493,7 @@ export const LineReadActivity: React.FC<{ problem: LineProblem; level: LineLevel
 
 /* ===================== ならべかえ ===================== */
 
-export const OrderActivity: React.FC<{ problem: OrderProblem; level: OrderLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, level, onNext, onResult }) => {
+export const OrderActivity: React.FC<{ problem: OrderProblem; level: OrderLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const { items, dir, sorted } = problem;
   const [placed, setPlaced] = useState<string[]>([]);
   const [solved, setSolved] = useState(false);
@@ -528,7 +528,7 @@ export const OrderActivity: React.FC<{ problem: OrderProblem; level: OrderLevel;
       }
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); onMiss?.(); rec.mistake();
       setHint(dir === 'asc'
         ? 'いちばん 小さい数から えらぼう。けたの 長さでなく、上の位から くらべてね。'
         : 'いちばん 大きい数から えらぼう。けたの 長さでなく、上の位から くらべてね。');

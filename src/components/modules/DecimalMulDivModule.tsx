@@ -157,7 +157,7 @@ export const DecimalMulDivModule: React.FC<Props> = ({ onExit }) => {
 const MCELL = 50;
 const MGAP = 18;
 
-const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, level, onNext, onResult }) => {
+const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const model = useMemo(() => buildMul(problem.a, problem.b), [problem]);
   const { productIntDigits, decimals, product, b } = model;
   const aScaled = Math.round(problem.a * 10 ** decimals).toString();
@@ -227,7 +227,7 @@ const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () 
     } else {
       // 2桁入れても一の位が合わない＝まちがい。
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); onMiss?.(); rec.mistake();
       setBuffer('');
       setShakeCol(activeCol); setTimeout(() => setShakeCol(null), 450);
       setHint('一の位の 数字を 入れてね。くり上がりが あるときは 2けた 入れると、十の位が 左の上に 小さく出るよ。');
@@ -247,7 +247,7 @@ const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () 
   const placePoint = (gap: number) => {
     if (stage !== 'POINT') return;
     if (gap === expectedPointGap) { finish(); }
-    else { setMistakes((m) => m + 1); rec.mistake(); setHint(`小数点より下の数字は ${decimals}こだよ。右から ${decimals}こ 数えてみよう。`); }
+    else { setMistakes((m) => m + 1); onMiss?.(); rec.mistake(); setHint(`小数点より下の数字は ${decimals}こだよ。右から ${decimals}こ 数えてみよう。`); }
   };
   const reset = () => { setAnswers({}); setBuffer(''); setCarries({}); setStage('DIGITS'); setMistakes(0); setHint(null); };
 
@@ -368,7 +368,7 @@ const DH = 56;
 
 type DivStage = 'PLACE' | 'QUOTIENT' | 'MUL' | 'SUB' | 'BRING';
 
-const DivSimulator: React.FC<{ problem: DivProblem; level: DivLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, level, onNext, onResult }) => {
+const DivSimulator: React.FC<{ problem: DivProblem; level: DivLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const model = useMemo(() => buildDiv(problem), [problem]);
   const { divisor, steps, intLen, baseLen, quotientStartIndex, quotientPointIndex, quotientValue, remainderValue, mode } = model;
 
@@ -410,7 +410,7 @@ const DivSimulator: React.FC<{ problem: DivProblem; level: DivLevel; onNext: () 
 
   const wrong = (msg: string) => {
     playSoftTry();
-    setMistakes((m) => m + 1);
+    setMistakes((m) => m + 1); onMiss?.();
     setShake(true); setTimeout(() => setShake(false), 450);
     setHint(msg);
   };
