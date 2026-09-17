@@ -22,6 +22,7 @@ import {
 import { generateAddSub, AddSubProblem, AddSubLevel, buildColumns } from './decimal';
 import { generateWordProblem, WordProblem } from './wordProblems';
 import { makeError, ErrorExample, ErrorPreset } from './errorHunter';
+import { skillToModuleId, type ModuleId } from '../store/progressStore';
 
 export type TestProblem =
   | { kind: 'decompose'; p: DecomposeProblem }
@@ -138,3 +139,62 @@ export function describeProblem(tp: TestProblem): { q: string; a: string } {
 export const OMOTE_MAX = TEST_STEPS.filter((s) => s.section === '表').reduce((a, s) => a + s.points, 0); // 100
 export const URA_MAX = TEST_STEPS.filter((s) => s.section === '裏').reduce((a, s) => a + s.points, 0);   // 50
 export const TOTAL_MAX = OMOTE_MAX + URA_MAX; // 150
+
+/* ---------------- 答案に残す記号と、テストのあとの「やり方」 ---------------- */
+
+/**
+ * 出題から項目の記号を取り出す。カタログと同じ文字列にする。
+ * 大問の題名は問題を作り直すたびに変わりうるので、集計の軸にはできない。
+ */
+export function skillIdOf(tp: TestProblem): string {
+  switch (tp.kind) {
+    case 'decompose': return 'decompose-3';
+    case 'word': return 'wp-mixed';
+    case 'error': return tp.preset as string;
+    case 'lineRead': return `line-read-${tp.level}`;
+    case 'addsub': return tp.build ? `addsub-build-${tp.level}` : `addsub-${tp.level}`;
+    default: return (tp as { level?: string }).level ?? tp.kind;
+  }
+}
+
+/**
+ * まちがえた問題に添える、やり方のひとこと。
+ * テスト中は出さない。**終わってから**まちがえた問題にだけ添える。
+ */
+const HOW_BY_SKILL: Record<string, string> = {
+  'decompose-3': '1が何こ・0.1が何こ・0.01が何こ、に 分けて 考えよう。',
+  'addsub-sub-whole': '空いている位には 0が あると 考えて、位を そろえよう。',
+  'addsub-add-diff': 'けた数が ちがっても、**小数点を そろえて** たてに 書こう。',
+  'addsub-sub-diff': 'けた数が ちがっても、**小数点を そろえて** たてに 書こう。',
+  'compare-mixed': '上の位から 順に くらべよう。けた数の 多さでは 決まらないよ。',
+};
+
+const HOW_BY_MODULE: Record<string, string> = {
+  addsub: '小数点を そろえて、同じ位どうしを たてに そろえよう。',
+  div: 'わる数の 小数点を 右へ動かした ぶんだけ、わられる数も 動かすよ。',
+  mul: '答えの 小数点は、かけられる数と かける数の 小数点の けた数を たした ぶん。',
+  compare: '上の位から 順に くらべよう。けた数の 多さでは 決まらないよ。',
+  line: '1めもりが いくつかを 先に 読みとろう。',
+  order: '同じ位で そろえてから、上の位の 順に ならべよう。',
+  collect: '0.1が10こで 1、0.01が10こで 0.1 だよ。',
+  compose: '1が何こ・0.1が何こ…を たし合わせると もとの数に なるよ。',
+  placeid: '小数点の すぐ左が 一の位。そこから 数えよう。',
+  scale: '10倍で 小数点が 右へ1つ、10でわると 左へ1つ 動くよ。',
+  unit: '1m＝100cm、1kg＝1000g。単位を そろえてから 直そう。',
+  wp: '場面から「たすのか・ひくのか・かけるのか・わるのか」を 先に 決めよう。',
+  fix: 'まず 小数点の 位置が そろっているかを 見よう。',
+  judge: '小数点の 位置と 位の そろえ方を、順に たしかめよう。',
+  mock: '見直しは 小数点の 位置から。位が そろっているか 見よう。',
+};
+
+export function howTo(skillId: string): string {
+  return HOW_BY_SKILL[skillId]
+    ?? HOW_BY_MODULE[skillId.split('-')[0] ?? '']
+    ?? 'もう一度 ゆっくり やってみよう。';
+}
+
+/** その項目を練習できるモジュール。テストのあと「れんしゅうする」で飛ぶ先。 */
+export function practiceModuleOf(skillId: string): ModuleId | null {
+  const m = skillToModuleId(skillId);
+  return m === 'mock-test' ? null : m;
+}

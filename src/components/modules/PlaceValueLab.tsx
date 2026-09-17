@@ -111,7 +111,7 @@ export const PlaceValueLab: React.FC<Props> = ({ onExit }) => {
 };
 
 /* ---------------- 数をつくる ---------------- */
-export const ComposeActivity: React.FC<{ problem: ComposeProblem; level: ComposeLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, level, onNext, onResult }) => {
+export const ComposeActivity: React.FC<{ problem: ComposeProblem; level: ComposeLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const units = PLACE_UNITS.slice(0, problem.decimals + 1);
   const [counts, setCounts] = useState<number[]>(units.map(() => 0));
   const [solved, setSolved] = useState(false);
@@ -135,7 +135,7 @@ export const ComposeActivity: React.FC<{ problem: ComposeProblem; level: Compose
       confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
       recordResult({ moduleId: 'place-value', skillId: `compose-${level}`, label: `${problem.target} をつくる`, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
-    } else { playSoftTry(); setWrong(true); setMistakes((m) => m + 1); }
+    } else { playSoftTry(); setWrong(true); setMistakes((m) => m + 1); onMiss?.(); }
   };
 
   const decompo = units.map((u, i) => `${u.label}を${problem.digits[i]}こ`).join('、');
@@ -189,7 +189,7 @@ export const ComposeActivity: React.FC<{ problem: ComposeProblem; level: Compose
 };
 
 /* ---------------- あつめた数 ---------------- */
-export const CollectActivity: React.FC<{ problem: CollectProblem; level: CollectLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, level, onNext, onResult }) => {
+export const CollectActivity: React.FC<{ problem: CollectProblem; level: CollectLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const [solved, setSolved] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [mistakes, setMistakes] = useState(0);
@@ -208,7 +208,7 @@ export const CollectActivity: React.FC<{ problem: CollectProblem; level: Collect
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); onMiss?.();
       setHint(problem.direction === 'count'
         ? `${problem.unitLabel} が 10こ あつまると 1つ上の位に なるよ。`
         : `${problem.unitLabel} の ${problem.count}こ分。10こで くり上がるよ。`);
@@ -240,7 +240,7 @@ export const CollectActivity: React.FC<{ problem: CollectProblem; level: Collect
 };
 
 /* ---------------- 10倍・1/10 ---------------- */
-export const ScaleActivity: React.FC<{ problem: ScaleProblem; level: ScaleLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, level, onNext, onResult }) => {
+export const ScaleActivity: React.FC<{ problem: ScaleProblem; level: ScaleLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const [solved, setSolved] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [mistakes, setMistakes] = useState(0);
@@ -258,7 +258,7 @@ export const ScaleActivity: React.FC<{ problem: ScaleProblem; level: ScaleLevel;
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); onMiss?.();
       setHint(isMul ? '倍にすると 各位が 左へ（小数点は 右へ）うごくよ。10倍は1つ、100倍は2つ。' : '小さくすると 各位が 右へ（小数点は 左へ）うごくよ。1/10は1つ、1/100は2つ。');
     }
   };
@@ -288,7 +288,7 @@ export const ScaleActivity: React.FC<{ problem: ScaleProblem; level: ScaleLevel;
 };
 
 /* ---------------- たんいと小数（長さ・重さ） ---------------- */
-export const UnitActivity: React.FC<{ problem: UnitProblem; level: UnitLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, level, onNext, onResult }) => {
+export const UnitActivity: React.FC<{ problem: UnitProblem; level: UnitLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const [solved, setSolved] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [mistakes, setMistakes] = useState(0);
@@ -305,7 +305,7 @@ export const UnitActivity: React.FC<{ problem: UnitProblem; level: UnitLevel; on
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); onMiss?.();
       setHint(problem.answerUnit === 'm'
         ? '1m = 100cm。100cm で 1m（小数点の左）、のこりの cm は 小数で 表すよ。'
         : '1kg = 1000g。1000g で 1kg（小数点の左）、のこりの g は 小数で 表すよ。');
@@ -337,7 +337,7 @@ export const UnitActivity: React.FC<{ problem: UnitProblem; level: UnitLevel; on
 };
 
 /* ---------------- ○の位の数字は？ ---------------- */
-export const PlaceIdActivity: React.FC<{ problem: PlaceIdProblem; level: PlaceIdLevel; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, level, onNext, onResult }) => {
+export const PlaceIdActivity: React.FC<{ problem: PlaceIdProblem; level: PlaceIdLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const [solved, setSolved] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
@@ -356,7 +356,7 @@ export const PlaceIdActivity: React.FC<{ problem: PlaceIdProblem; level: PlaceId
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); onMiss?.();
       setShake(true); setTimeout(() => setShake(false), 450);
       setHint('一の位から 右へ、小数第一位・第二位…と かぞえて、その位の 数字を 見つけよう。');
     }
@@ -390,7 +390,7 @@ export const PlaceIdActivity: React.FC<{ problem: PlaceIdProblem; level: PlaceId
 };
 
 /* ---------------- 数の分解（1.695 = 1を何こ…） ---------------- */
-export const DecomposeActivity: React.FC<{ problem: DecomposeProblem; onNext: () => void; onResult?: (perfect: boolean) => void }> = ({ problem, onNext, onResult }) => {
+export const DecomposeActivity: React.FC<{ problem: DecomposeProblem; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, onNext, onResult, onMiss }) => {
   const units = PLACE_UNITS; // 1 / 0.1 / 0.01 / 0.001
   const targets = [problem.counts.ones, problem.counts.tenths, problem.counts.hundredths, problem.counts.thousandths];
   const [counts, setCounts] = useState<number[]>([0, 0, 0, 0]);
@@ -412,7 +412,7 @@ export const DecomposeActivity: React.FC<{ problem: DecomposeProblem; onNext: ()
       confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
       recordResult({ moduleId: 'place-value', skillId: 'decompose-3', label: `${problem.valueStr} を分解`, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
-    } else { playSoftTry(); setWrong(true); setMistakes((m) => m + 1); }
+    } else { playSoftTry(); setWrong(true); setMistakes((m) => m + 1); onMiss?.(); }
   };
 
   const decompo = units.map((u, i) => `${u.label}を${targets[i]}こ`).join('、');

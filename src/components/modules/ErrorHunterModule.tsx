@@ -49,7 +49,7 @@ export const ErrorHunterModule: React.FC<Props> = ({ onExit }) => {
   );
 };
 
-export const ErrorRound: React.FC<{ ex: ErrorExample; onNext: () => void; startStage?: 'judge' | 'fix'; onResult?: (perfect: boolean) => void }> = ({ ex, onNext, startStage = 'judge', onResult }) => {
+export const ErrorRound: React.FC<{ ex: ErrorExample; onNext: () => void; startStage?: 'judge' | 'fix'; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ ex, onNext, startStage = 'judge', onResult, onMiss }) => {
   const [stage, setStage] = useState<'judge' | 'fix' | 'reason' | 'done'>(startStage);
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
@@ -81,22 +81,22 @@ export const ErrorRound: React.FC<{ ex: ErrorExample; onNext: () => void; startS
       else setStage('fix'); // まちがいを「まちがい」と見ぬけた
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); onMiss?.(); rec.mistake();
       setHint(ex.isCorrect ? 'もう一度 よく見て。この式は 合っているかな？' : 'もう一度 よく見て。どこかに まちがいが あるよ。');
     }
   };
 
   const submitFix = (v: string) => {
     if (Number(v) === Number(ex.correctAnswer)) setStage('reason');
-    else { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint('正しい 答えを もう一度 計算してみよう。小数点の いちに 気をつけて。'); }
+    else { playSoftTry(); setMistakes((m) => m + 1); onMiss?.(); rec.mistake(); setHint('正しい 答えを もう一度 計算してみよう。小数点の いちに 気をつけて。'); }
   };
   const submitSign = (s: string) => {
     if (s === ex.correctAnswer) setStage('reason');
-    else { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint('数直線で 考えよう。右にあるほうが 大きいよ。'); }
+    else { playSoftTry(); setMistakes((m) => m + 1); onMiss?.(); rec.mistake(); setHint('数直線で 考えよう。右にあるほうが 大きいよ。'); }
   };
   const chooseReason = (i: number) => {
     if (i === ex.correctReasonIndex) finish();
-    else { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint('うーん、ちがうみたい。どんな まちがいだったか もう一度 考えよう。'); }
+    else { playSoftTry(); setMistakes((m) => m + 1); onMiss?.(); rec.mistake(); setHint('うーん、ちがうみたい。どんな まちがいだったか もう一度 考えよう。'); }
   };
 
   return (
