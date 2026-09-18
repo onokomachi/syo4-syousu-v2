@@ -14,6 +14,7 @@ import { ErrorExample, generateError } from '../../lib/errorHunter';
 import { reasonToTag } from '../../lib/missTags';
 import { useProgressStore } from '../../store/progressStore';
 import { playClear, playSoftTry } from '../../lib/sound';
+import { ScratchPadToggle } from 'learning-app-kit/react';
 
 interface Props { onExit: () => void; }
 
@@ -116,6 +117,9 @@ export const ErrorRound: React.FC<{ ex: ErrorExample; onNext: () => void; startS
               <Lightbulb className="text-amber-500 shrink-0" size={20} /><p className="text-muted font-bold">{hint}</p>
             </div>
           )}
+
+          {/* 暗算では厳しい計算があるので、紙のかわりに書ける場所を出す（採点はしない） */}
+          <ScratchPadToggle ops={['+', '-', '×', '÷']} />
 
           {stage === 'judge' && (
             <>

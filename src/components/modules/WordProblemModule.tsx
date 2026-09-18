@@ -4,7 +4,7 @@
  * TTS・イラスト(絵文字)で読解負荷を相殺。表面語に つられない練習。
  */
 import React, { useState } from 'react';
-import { useRoundRecorder } from 'learning-app-kit/react';
+import { useRoundRecorder, ScratchPadToggle } from 'learning-app-kit/react';
 import { motion } from 'motion/react';
 import { ChevronLeft, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -105,6 +105,11 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
         </div>
 
         {hint && <HintBox tone={pickedWrong !== null && stage === 'shiki' ? 'wrong' : 'hint'}>{hint}</HintBox>}
+
+
+        {/* 暗算では厳しい計算があるので、紙のかわりに書ける場所を出す（採点はしない） */}
+
+        <ScratchPadToggle ops={['+', '-', '×', '÷']} />
 
         {stage === 'shiki' && (
           <div>
