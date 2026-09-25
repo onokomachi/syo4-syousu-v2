@@ -13,6 +13,7 @@ import { PlaceValueLab } from './components/modules/PlaceValueLab';
 import { ErrorHunterModule } from './components/modules/ErrorHunterModule';
 import { WordProblemModule } from './components/modules/WordProblemModule';
 import { MockTestModule } from './components/modules/MockTestModule';
+import { TrialModule } from './components/modules/TrialModule';
 import { LogView } from './components/LogView';
 import { ReflectionView } from './components/ReflectionView';
 import { ComingSoon } from './components/modules/ComingSoon';
@@ -25,7 +26,7 @@ import { DeepSeaRain } from './components/ui/DeepSeaRain';
 import { AuroraRain } from './components/ui/AuroraRain';
 import { CosmosRain } from './components/ui/CosmosRain';
 
-type View = { kind: 'HUB' } | { kind: 'LOG' } | { kind: 'REFLECT' } | { kind: 'TEST' } | { kind: 'MODULE'; id: ModuleId };
+type View = { kind: 'HUB' } | { kind: 'LOG' } | { kind: 'REFLECT' } | { kind: 'TEST' } | { kind: 'TRIAL' } | { kind: 'MODULE'; id: ModuleId };
 
 export default function App() {
   const [view, setView] = useState<View>({ kind: 'HUB' });
@@ -67,7 +68,7 @@ export default function App() {
       <AnimatePresence mode="wait">
         {view.kind === 'HUB' && (
           <motion.div key="hub" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
-            <Hub onSelectModule={(id) => setView({ kind: 'MODULE', id })} onOpenLog={() => setView({ kind: 'LOG' })} onStartTest={() => setView({ kind: 'TEST' })} onOpenReflect={() => setView({ kind: 'REFLECT' })} />
+            <Hub onSelectModule={(id) => setView({ kind: 'MODULE', id })} onOpenLog={() => setView({ kind: 'LOG' })} onStartTest={() => setView({ kind: 'TEST' })} onStartTrial={() => setView({ kind: 'TRIAL' })} onOpenReflect={() => setView({ kind: 'REFLECT' })} />
           </motion.div>
         )}
 
@@ -75,6 +76,12 @@ export default function App() {
           <motion.div key="test" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
             {/* テストのあと、まちがえた項目の練習へ直接飛べるようにする */}
               <MockTestModule onExit={goHub} onPractice={(id) => setView({ kind: 'MODULE', id })} />
+          </motion.div>
+        )}
+        {view.kind === 'TRIAL' && (
+          <motion.div key="trial" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
+            {/* テストのあと、まちがえた項目の練習へ直接飛べるようにする */}
+              <TrialModule onExit={goHub} onPractice={(id) => setView({ kind: 'MODULE', id })} />
           </motion.div>
         )}
 

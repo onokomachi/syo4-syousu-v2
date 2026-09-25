@@ -13,11 +13,15 @@ import { ModuleId, useProgressStore } from '../store/progressStore';
 import { Settings } from './Settings';
 import { GoalRing } from './ui/GoalRing';
 import { getDueReviewTargets, getReviewTargets } from '../lib/review';
+import { TrialCard } from 'learning-app-kit/react';
+import { FLOOR_COUNT } from '../lib/trialConfig';
 
 interface Props {
   onSelectModule: (id: ModuleId) => void;
   onOpenLog: () => void;
   onStartTest: () => void;
+  /** 神域の試練（ハブのいちばん下） */
+  onStartTrial: () => void;
   onOpenReflect: () => void;
 }
 
@@ -74,7 +78,7 @@ const ModuleCard: React.FC<{ m: ModuleMeta; onClick: () => void; cleared: number
   );
 };
 
-export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, onOpenReflect }) => {
+export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, onOpenReflect, onStartTrial }) => {
   const [showSettings, setShowSettings] = useState(false);
   const getModuleCount = useProgressStore((s) => s.getModuleCount);
   const mastery = useProgressStore((s) => s.mastery);
@@ -198,6 +202,11 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, o
               onClick={() => onSelectModule(m.id)}
             />
           ))}
+        </div>
+
+        {/* 神域の試練（単元の中の実力チェック）。ハブのいちばん下に置く */}
+        <div className="mt-6">
+          <TrialCard appId="syousu" floors={FLOOR_COUNT} onClick={onStartTrial} />
         </div>
       </div>
 
