@@ -18,6 +18,7 @@ import { CompareActivity, LineReadActivity, OrderActivity } from './NumberLineMo
 import { AddSubSimulator, AddSubMasterSimulator } from './DecimalAddSubModule';
 import { Round as WordRound } from './WordProblemModule';
 import { ErrorRound } from './ErrorHunterModule';
+import { forceSolo } from 'learning-app-kit/sync';
 
 interface Props {
   onExit: () => void;
@@ -53,6 +54,8 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
   const problems = useMemo<TestProblem[]>(() => activeSteps.map((s) => s.gen()), [activeSteps, seed]);
 
   const choose = (m: Mode) => {
+    // 本番テストは実力を測る場面。ペア（1台を2人）のままなら、ここでソロに切り替える
+    forceSolo();
     setMode(m);
     setIndex(0);
     setResults({}); setMisses({}); setGaveUp({});
@@ -60,6 +63,8 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
     setPhase('RUN');
   };
   const restart = () => {
+    // 本番テストは実力を測る場面。ペア（1台を2人）のままなら、ここでソロに切り替える
+    forceSolo();
     setSeed((s) => s + 1);
     setIndex(0);
     setResults({}); setMisses({}); setGaveUp({});
