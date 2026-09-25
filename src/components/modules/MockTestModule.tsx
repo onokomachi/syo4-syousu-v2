@@ -300,25 +300,9 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
   const scoredDone = activeSteps.slice(0, index).filter((s) => s.section !== '参考').length;
   const progress = (index / activeSteps.length) * 100;
 
-  const renderActivity = () => {
-    const common = { onNext: advance, onResult, onMiss };
-    switch (tp.kind) {
-      case 'decompose': return <DecomposeActivity {...common} problem={tp.p} />;
-      case 'placeid': return <PlaceIdActivity {...common} problem={tp.p} level={tp.level} />;
-      case 'unit': return <UnitActivity {...common} problem={tp.p} level={tp.level} />;
-      case 'compose': return <ComposeActivity {...common} problem={tp.p} level={tp.level} />;
-      case 'collect': return <CollectActivity {...common} problem={tp.p} level={tp.level} />;
-      case 'lineRead': return <LineReadActivity {...common} problem={tp.p} level={tp.level} />;
-      case 'compare': return <CompareActivity {...common} pair={tp.p} level={tp.level} />;
-      case 'scale': return <ScaleActivity {...common} problem={tp.p} level={tp.level} />;
-      case 'addsub': return tp.build
-        ? <AddSubMasterSimulator {...common} problem={tp.p} level={tp.level} />
-        : <AddSubSimulator {...common} problem={tp.p} level={tp.level} buildMode={tp.build} />;
-      case 'word': return <WordRound {...common} problem={tp.p} />;
-      case 'error': return <ErrorRound ex={tp.p} startStage="fix" onNext={advance} onResult={onResult} />;
-      case 'order': return <OrderActivity {...common} problem={tp.p} level={tp.level} />;
-    }
-  };
+  const renderActivity = () => (
+    <TestActivity tp={tp} onNext={advance} onResult={onResult} onMiss={onMiss} />
+  );
 
   const sectionColor = step.section === '表' ? 'bg-blue-100 text-blue-700' : step.section === '裏' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-700';
 
@@ -360,4 +344,35 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
       </div>
     </div>
   );
+};
+
+/**
+ * 本番テストの1問を、練習と同じ解答画面で出す。
+ * 神域の試練もこれを使う（練習・テスト・試練で、同じ問題は同じ画面で解く）。
+ */
+export const TestActivity: React.FC<{
+  tp: TestProblem;
+  onNext: () => void;
+  onResult: (perfect: boolean) => void;
+  onMiss?: () => void;
+  nextLabel?: string;
+}> = ({ tp, onNext, onResult, onMiss, nextLabel = 'つぎの もんだいへ' }) => {
+  const common = { onNext, onResult, onMiss, nextLabel };
+  switch (tp.kind) {
+    case 'decompose': return <DecomposeActivity {...common} problem={tp.p} />;
+    case 'placeid': return <PlaceIdActivity {...common} problem={tp.p} level={tp.level} />;
+    case 'unit': return <UnitActivity {...common} problem={tp.p} level={tp.level} />;
+    case 'compose': return <ComposeActivity {...common} problem={tp.p} level={tp.level} />;
+    case 'collect': return <CollectActivity {...common} problem={tp.p} level={tp.level} />;
+    case 'lineRead': return <LineReadActivity {...common} problem={tp.p} level={tp.level} />;
+    case 'compare': return <CompareActivity {...common} pair={tp.p} level={tp.level} />;
+    case 'scale': return <ScaleActivity {...common} problem={tp.p} level={tp.level} />;
+    case 'addsub': return tp.build
+      ? <AddSubMasterSimulator {...common} problem={tp.p} level={tp.level} />
+      : <AddSubSimulator {...common} problem={tp.p} level={tp.level} buildMode={tp.build} />;
+    case 'word': return <WordRound {...common} problem={tp.p} />;
+    case 'error': return <ErrorRound ex={tp.p} startStage="fix" onNext={onNext} onResult={onResult} />;
+    case 'order': return <OrderActivity {...common} problem={tp.p} level={tp.level} />;
+  }
+  return null;
 };
