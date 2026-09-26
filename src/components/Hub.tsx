@@ -20,7 +20,7 @@ interface Props {
   onSelectModule: (id: ModuleId) => void;
   onOpenLog: () => void;
   onStartTest: () => void;
-  /** 神域の試練（ハブのいちばん下） */
+  /** 実力の階段（ハブのいちばん下） */
   onStartTrial: () => void;
   onOpenReflect: () => void;
 }
@@ -204,7 +204,7 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, o
           ))}
         </div>
 
-        {/* 神域の試練（単元の中の実力チェック）。ハブのいちばん下に置く */}
+        {/* 実力の階段（単元の中の実力チェック）。ハブのいちばん下に置く */}
         <div className="mt-6">
           <TrialCard appId="syousu" floors={FLOOR_COUNT} onClick={onStartTrial} />
         </div>
