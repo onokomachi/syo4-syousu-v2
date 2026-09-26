@@ -157,7 +157,7 @@ export const DecimalMulDivModule: React.FC<Props> = ({ onExit }) => {
 const MCELL = 50;
 const MGAP = 18;
 
-const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
+export const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const model = useMemo(() => buildMul(problem.a, problem.b), [problem]);
   const { productIntDigits, decimals, product, b } = model;
   const aScaled = Math.round(problem.a * 10 ** decimals).toString();
@@ -368,7 +368,7 @@ const DH = 56;
 
 type DivStage = 'PLACE' | 'QUOTIENT' | 'MUL' | 'SUB' | 'BRING';
 
-const DivSimulator: React.FC<{ problem: DivProblem; level: DivLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
+export const DivSimulator: React.FC<{ problem: DivProblem; level: DivLevel; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, level, onNext, onResult, onMiss }) => {
   const model = useMemo(() => buildDiv(problem), [problem]);
   const { divisor, steps, intLen, baseLen, quotientStartIndex, quotientPointIndex, quotientValue, remainderValue, mode } = model;
 
