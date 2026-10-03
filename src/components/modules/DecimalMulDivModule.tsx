@@ -36,8 +36,8 @@ export const DecimalMulDivModule: React.FC<Props> = ({ onExit }) => {
   const [divLevel, setDivLevel] = useState<DivLevel>('div-basic');
   const [mulProblem, setMulProblem] = useState<MulProblem | null>(null);
   const [divProblem, setDivProblem] = useState<DivProblem | null>(null);
-  const mulAdaptive = useAdaptive(MUL_LEVELS.map((l) => l.id), 'mul');
-  const divAdaptive = useAdaptive(DIV_LEVELS.map((l) => l.id), 'div');
+  const mulAdaptive = useAdaptive(MUL_LEVELS.map((l) => l.id));
+  const divAdaptive = useAdaptive(DIV_LEVELS.map((l) => l.id));
 
   const effMulLevel = mode === 'adaptive' ? mulAdaptive.level : mulLevel;
   const effDivLevel = mode === 'adaptive' ? divAdaptive.level : divLevel;
@@ -82,8 +82,8 @@ export const DecimalMulDivModule: React.FC<Props> = ({ onExit }) => {
                   key={lv.id}
                   label={lv.label}
                   desc={lv.description}
-                  mastery={getMasteryStreak(`mul-${lv.id}`)}
-                  todayCount={getTodaySkillCount(`mul-${lv.id}`)}
+                  mastery={getMasteryStreak(lv.id)}
+                  todayCount={getTodaySkillCount(lv.id)}
                   onClick={() => startMul(lv.id)}
                   accentBorder="hover:border-violet-400"
                 />
@@ -104,8 +104,8 @@ export const DecimalMulDivModule: React.FC<Props> = ({ onExit }) => {
                   key={lv.id}
                   label={lv.label}
                   desc={lv.description}
-                  mastery={getMasteryStreak(`div-${lv.id}`)}
-                  todayCount={getTodaySkillCount(`div-${lv.id}`)}
+                  mastery={getMasteryStreak(lv.id)}
+                  todayCount={getTodaySkillCount(lv.id)}
                   onClick={() => startDiv(lv.id)}
                   accentBorder="hover:border-blue-400"
                 />
@@ -174,7 +174,7 @@ export const MulSimulator: React.FC<{ problem: MulProblem; level: MulLevel; onNe
   // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
   const rec = useRoundRecorder({
     moduleId: 'decimal-muldiv',
-    skillId: `mul-${level}`,
+    skillId: level,
     record: recordResult,
     abandonLabel: () => `${problem.a} × ${problem.b}`,
   });
@@ -420,7 +420,7 @@ export const DivSimulator: React.FC<{ problem: DivProblem; level: DivLevel; onNe
     playClear();
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
     recordResult({
-      moduleId: 'decimal-muldiv', skillId: `div-${level}`,
+      moduleId: 'decimal-muldiv', skillId: level,
       label: `${problem.dividend} ÷ ${problem.divisor}`, mistakes: miss, correct: miss === 0,
       misses: miss > 0 ? [{ tag: 'calc-muldiv' }] : undefined,
     });

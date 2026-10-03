@@ -39,8 +39,8 @@ export const NumberLineModule: React.FC<Props> = ({ onExit }) => {
   const [lineProblem, setLineProblem] = useState<LineProblem | null>(null);
   const [readProblem, setReadProblem] = useState<LineProblem | null>(null);
   const [orderProblem, setOrderProblem] = useState<OrderProblem | null>(null);
-  const compareAdaptive = useAdaptive(COMPARE_LEVELS.map((l) => l.id), 'compare');
-  const lineAdaptive = useAdaptive(LINE_LEVELS.map((l) => l.id), 'line');
+  const compareAdaptive = useAdaptive(COMPARE_LEVELS.map((l) => l.id));
+  const lineAdaptive = useAdaptive(LINE_LEVELS.map((l) => l.id));
   const effCompareLevel = mode === 'adaptive' ? compareAdaptive.level : compareLevel;
   const effLineLevel = mode === 'adaptive' ? lineAdaptive.level : lineLevel;
   const getMasteryStreak = useProgressStore((s) => s.getMasteryStreak);
@@ -73,8 +73,8 @@ export const NumberLineModule: React.FC<Props> = ({ onExit }) => {
                   key={lv.id}
                   label={lv.label}
                   desc={lv.description}
-                  mastery={getMasteryStreak(`compare-${lv.id}`)}
-                  todayCount={getTodaySkillCount(`compare-${lv.id}`)}
+                  mastery={getMasteryStreak(lv.id)}
+                  todayCount={getTodaySkillCount(lv.id)}
                   onClick={() => startCompare(lv.id)}
                   accentBorder="hover:border-amber-400"
                 />
@@ -93,8 +93,8 @@ export const NumberLineModule: React.FC<Props> = ({ onExit }) => {
                   key={lv.id}
                   label={lv.label}
                   desc={lv.description}
-                  mastery={getMasteryStreak(`line-${lv.id}`)}
-                  todayCount={getTodaySkillCount(`line-${lv.id}`)}
+                  mastery={getMasteryStreak(lv.id)}
+                  todayCount={getTodaySkillCount(lv.id)}
                   onClick={() => startLine(lv.id)}
                   accentBorder="hover:border-amber-400"
                 />
@@ -127,8 +127,8 @@ export const NumberLineModule: React.FC<Props> = ({ onExit }) => {
                   key={lv.id}
                   label={lv.label}
                   desc={lv.description}
-                  mastery={getMasteryStreak(`order-${lv.id}`)}
-                  todayCount={getTodaySkillCount(`order-${lv.id}`)}
+                  mastery={getMasteryStreak(lv.id)}
+                  todayCount={getTodaySkillCount(lv.id)}
                   onClick={() => startOrder(lv.id)}
                   accentBorder="hover:border-amber-400"
                 />
@@ -244,7 +244,7 @@ export const CompareActivity: React.FC<{ pair: ComparePair; level: CompareLevel;
   // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
   const rec = useRoundRecorder({
     moduleId: 'number-line',
-    skillId: `compare-${level}`,
+    skillId: level,
     record: recordResult,
     abandonLabel: () => `${pair.aStr} ${correct} ${pair.bStr}`,
   });
@@ -354,7 +354,7 @@ const LineActivity: React.FC<{ problem: LineProblem; level: LineLevel; onNext: (
   // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
   const rec = useRoundRecorder({
     moduleId: 'number-line',
-    skillId: `line-${level}`,
+    skillId: level,
     record: recordResult,
     abandonLabel: () => `${targetStr} を数直線に`,
   });
@@ -503,7 +503,7 @@ export const OrderActivity: React.FC<{ problem: OrderProblem; level: OrderLevel;
   // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
   const rec = useRoundRecorder({
     moduleId: 'number-line',
-    skillId: `order-${level}`,
+    skillId: level,
     record: recordResult,
     abandonLabel: () => `${dirLabel}にならべる`,
   });
