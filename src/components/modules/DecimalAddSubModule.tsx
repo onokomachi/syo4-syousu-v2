@@ -40,7 +40,7 @@ export const DecimalAddSubModule: React.FC<Props> = ({ onExit }) => {
   const [master, setMaster] = useState(false); // SETUP の「マスターモード」トグル
   const [runMaster, setRunMaster] = useState(false); // SIM がマスター自由配置か
   const [problem, setProblem] = useState<AddSubProblem | null>(null);
-  const adaptive = useAdaptive(ADDSUB_LEVELS.map((l) => l.id), 'addsub');
+  const adaptive = useAdaptive(ADDSUB_LEVELS.map((l) => l.id), (l) => `addsub-${l}`);
   const effectiveLevel = mode === 'adaptive' ? adaptive.level : level;
   const getMasteryStreak = useProgressStore((s) => s.getMasteryStreak);
   const getTodaySkillCount = useProgressStore((s) => s.getTodaySkillCount);

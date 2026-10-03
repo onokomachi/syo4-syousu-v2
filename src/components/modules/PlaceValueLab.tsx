@@ -65,27 +65,27 @@ export const PlaceValueLab: React.FC<Props> = ({ onExit }) => {
           <h1 className="text-3xl font-black text-content text-center mb-6">位取りラボ</h1>
           <Group icon={<LayoutGrid size={20} />} title="数をつくる">
             {COMPOSE_LEVELS.map((lv) => (
-              <LevelCard key={lv.id} label={lv.label} desc={lv.description} mastery={getMasteryStreak(`compose-${lv.id}`)} todayCount={getTodaySkillCount(`compose-${lv.id}`)} onClick={() => startCompose(lv.id)} accentBorder="hover:border-rose-400" />
+              <LevelCard key={lv.id} label={lv.label} desc={lv.description} mastery={getMasteryStreak(lv.id)} todayCount={getTodaySkillCount(lv.id)} onClick={() => startCompose(lv.id)} accentBorder="hover:border-rose-400" />
             ))}
           </Group>
           <Group icon={<Boxes size={20} />} title="あつめた数">
             {COLLECT_LEVELS.map((lv) => (
-              <LevelCard key={lv.id} label={lv.label} desc={lv.description} mastery={getMasteryStreak(`collect-${lv.id}`)} todayCount={getTodaySkillCount(`collect-${lv.id}`)} onClick={() => startCollect(lv.id)} accentBorder="hover:border-rose-400" />
+              <LevelCard key={lv.id} label={lv.label} desc={lv.description} mastery={getMasteryStreak(lv.id)} todayCount={getTodaySkillCount(lv.id)} onClick={() => startCollect(lv.id)} accentBorder="hover:border-rose-400" />
             ))}
           </Group>
           <Group icon={<Hash size={20} />} title="○の位の数字">
             {PLACEID_LEVELS.map((lv) => (
-              <LevelCard key={lv.id} label={lv.label} desc={lv.description} mastery={getMasteryStreak(`placeid-${lv.id}`)} todayCount={getTodaySkillCount(`placeid-${lv.id}`)} onClick={() => startPlaceid(lv.id)} accentBorder="hover:border-rose-400" />
+              <LevelCard key={lv.id} label={lv.label} desc={lv.description} mastery={getMasteryStreak(lv.id)} todayCount={getTodaySkillCount(lv.id)} onClick={() => startPlaceid(lv.id)} accentBorder="hover:border-rose-400" />
             ))}
           </Group>
           <Group icon={<ArrowLeftRight size={20} />} title="10倍・10分の1・100倍・1/100">
             {SCALE_LEVELS.map((lv) => (
-              <LevelCard key={lv.id} label={lv.label} desc={lv.description} mastery={getMasteryStreak(`scale-${lv.id}`)} todayCount={getTodaySkillCount(`scale-${lv.id}`)} onClick={() => startScale(lv.id)} accentBorder="hover:border-rose-400" />
+              <LevelCard key={lv.id} label={lv.label} desc={lv.description} mastery={getMasteryStreak(lv.id)} todayCount={getTodaySkillCount(lv.id)} onClick={() => startScale(lv.id)} accentBorder="hover:border-rose-400" />
             ))}
           </Group>
           <Group icon={<Ruler size={20} />} title="たんいと小数（長さ・重さ）">
             {UNIT_LEVELS.map((lv) => (
-              <LevelCard key={lv.id} label={lv.label} desc={lv.description} mastery={getMasteryStreak(`unit-${lv.id}`)} todayCount={getTodaySkillCount(`unit-${lv.id}`)} onClick={() => startUnit(lv.id)} accentBorder="hover:border-rose-400" />
+              <LevelCard key={lv.id} label={lv.label} desc={lv.description} mastery={getMasteryStreak(lv.id)} todayCount={getTodaySkillCount(lv.id)} onClick={() => startUnit(lv.id)} accentBorder="hover:border-rose-400" />
             ))}
           </Group>
         </div>
@@ -133,7 +133,7 @@ export const ComposeActivity: React.FC<{ problem: ComposeProblem; level: Compose
       setSolved(true);
       playClear();
       confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: `compose-${level}`, label: `${problem.target} をつくる`, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: level, label: `${problem.target} をつくる`, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else { playSoftTry(); setWrong(true); setMistakes((m) => m + 1); onMiss?.(); }
   };
@@ -204,7 +204,7 @@ export const CollectActivity: React.FC<{ problem: CollectProblem; level: Collect
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: `collect-${level}`, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: level, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
@@ -254,7 +254,7 @@ export const ScaleActivity: React.FC<{ problem: ScaleProblem; level: ScaleLevel;
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: `scale-${level}`, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: level, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
@@ -301,7 +301,7 @@ export const UnitActivity: React.FC<{ problem: UnitProblem; level: UnitLevel; on
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: `unit-${level}`, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: level, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
@@ -352,7 +352,7 @@ export const PlaceIdActivity: React.FC<{ problem: PlaceIdProblem; level: PlaceId
       setSolved(true);
       playClear();
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-      recordResult({ moduleId: 'place-value', skillId: `placeid-${level}`, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
+      recordResult({ moduleId: 'place-value', skillId: level, label: question, correct: true, mistakes, misses: mistakes > 0 ? [{ tag: 'placevalue' }] : undefined });
       onResult?.(mistakes === 0);
     } else {
       playSoftTry();
