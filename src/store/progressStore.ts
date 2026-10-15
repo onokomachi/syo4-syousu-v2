@@ -8,14 +8,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { getProgressStorage } from '../services/progressRepository';
 import { inferInitialState, scheduleAfterResult, type ReviewState } from 'learning-app-kit/review';
 
-export type ModuleId =
-  | 'decimal-addsub'
-  | 'decimal-muldiv'
-  | 'error-hunter'
-  | 'number-line'
-  | 'place-value'
-  | 'word-problem'
-  | 'mock-test';
+import { skillToModuleId, type ModuleId } from '../lib/moduleOfSkill';
+export { skillToModuleId, type ModuleId };
 
 /** 本番テストの各設問の結果（学習のきろくで詳細表示するため） */
 export interface TestStepResult {
@@ -83,17 +77,6 @@ export interface SkillMastery {
   perfectStreak?: number; // 連続ノーミス数（熟達バー表示用。ミスで0にリセット）
 }
 
-/** skillId のプレフィックスから所属モジュールを判定（累計カウンタの移行・まちがいマップ集計用） */
-export function skillToModuleId(skillId: string): ModuleId | null {
-  if (skillId === 'mock-test' || skillId.startsWith('mock-')) return 'mock-test';
-  if (skillId.startsWith('addsub-')) return 'decimal-addsub';
-  if (skillId.startsWith('mul-') || skillId.startsWith('div-') || skillId.startsWith('muldiv-')) return 'decimal-muldiv';
-  if (skillId.startsWith('compare-') || skillId.startsWith('line-') || skillId.startsWith('lineread-') || skillId.startsWith('order-')) return 'number-line';
-  if (skillId.startsWith('compose-') || skillId.startsWith('collect-') || skillId.startsWith('scale-') || skillId.startsWith('unit-') || skillId.startsWith('placeid-') || skillId.startsWith('decompose-')) return 'place-value';
-  if (skillId.startsWith('wp-') || skillId.startsWith('word-')) return 'word-problem';
-  if (skillId.startsWith('judge-') || skillId.startsWith('fix-') || skillId.startsWith('eh-') || skillId.startsWith('error-')) return 'error-hunter';
-  return null;
-}
 
 interface ProgressState {
   logs: ResultRecord[];

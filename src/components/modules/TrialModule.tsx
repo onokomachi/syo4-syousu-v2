@@ -13,8 +13,8 @@ import { practiceModuleOf, type TestProblem } from '../../lib/testConfig';
 import type { ModuleId } from '../../store/progressStore';
 import { playClear, playCorrect, playSoftTry } from '../../lib/sound';
 import { TestActivity } from './MockTestModule';
-import { MulSimulator, DivSimulator } from './DecimalMulDivModule';
-import { generateMul, generateDiv, type MulLevel, type DivLevel } from '../../lib/decimalMulDiv';
+import { MulDivRound } from './MulDivRounds';
+import { generateMulDiv, isMulDivLevel } from '../../lib/mulDivQuestions';
 import { generateCompare, generateLine, generateOrder, type CompareLevel, type LineLevel, type OrderLevel } from '../../lib/numberLine';
 import { generateCompose, generatePlaceId, generateScale, generateUnit, type ComposeLevel, type PlaceIdLevel, type ScaleLevel, type UnitLevel } from '../../lib/placeValue';
 import { generateAddSub } from '../../lib/decimal';
@@ -77,11 +77,9 @@ export const ExtraRound: React.FC<ExtraProps> = ({ skillId, onResult, onMiss }) 
   const common = { onNext: () => {}, onResult, onMiss, nextLabel: 'つぎへ' };
   // 数直線・位取り・たし算ひき算は、本番テストと同じ画面（TestActivity）で出せる形に作る
   const [tp] = useState(() => extraTestProblem(skillId));
-  const [mul] = useState(() => (skillId.startsWith('mul-') ? generateMul(skillId as MulLevel) : null));
-  const [div] = useState(() => (skillId.startsWith('div-') ? generateDiv(skillId as DivLevel) : null));
+  const [md] = useState(() => (isMulDivLevel(skillId) ? generateMulDiv(skillId) : null));
   if (tp) return <TestActivity tp={tp} {...common} />;
-  if (mul) return <MulSimulator problem={mul} level={skillId as MulLevel} {...common} />;
-  if (div) return <DivSimulator problem={div} level={skillId as DivLevel} {...common} />;
+  if (md) return <MulDivRound q={md} {...common} />;
   return null;
 };
 

@@ -1,5 +1,6 @@
 /**
- * 本番テストモード。実際の単元テスト「5.小数のしくみ」を同じ大問順・同じ問題数で通しで解く。
+ * 本番テストモード。実際の単元テストを同じ大問順・同じ問題数で通しで解く。
+ * テストは「5. 小数のしくみ」と「13. 小数のかけ算とわり算」の2つから選ぶ。
  * 開始前に 表だけ / 裏だけ / 表＋裏（ぜんぶ）の範囲を選べる。
  * 既存の各アクティビティを「1問だけ出す」形で再利用し、ノーミス完答を採点する。
  * 表=知識技能100点 / 裏=思考判断表現50点 / 参考=評価のみ。結果は学習のきろくに詳細つきで残す。
@@ -7,7 +8,7 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ClipboardCheck, Home, RotateCcw, Trophy, HelpCircle, Lightbulb, Dumbbell } from 'lucide-react';
-import { TEST_STEPS, TestProblem, TestStep, describeProblem, OMOTE_MAX, URA_MAX, TOTAL_MAX, howTo, practiceModuleOf, skillIdOf } from '../../lib/testConfig';
+import { TESTS, TestProblem, TestStep, TestDef, TestId, describeProblem, howTo, practiceModuleOf, skillIdOf } from '../../lib/testConfig';
 import { useProgressStore, TestDetail, ModuleId } from '../../store/progressStore';
 import { useReflectionStore } from '../../store/reflectionStore';
 import { ConfidenceCheck, calibrationMessage } from '../shared/ConfidenceCheck';
@@ -18,6 +19,7 @@ import { CompareActivity, LineReadActivity, OrderActivity } from './NumberLineMo
 import { AddSubSimulator, AddSubMasterSimulator } from './DecimalAddSubModule';
 import { Round as WordRound } from './WordProblemModule';
 import { ErrorRound } from './ErrorHunterModule';
+import { MulDivRound } from './MulDivRounds';
 import { forceSolo } from 'learning-app-kit/sync';
 
 interface Props {
@@ -29,15 +31,26 @@ interface Props {
 type Phase = 'INTRO' | 'RUN' | 'RESULT';
 type Mode = '表' | '裏' | 'ぜんぶ';
 
-const stepsForMode = (mode: Mode): TestStep[] => {
-  if (mode === '表') return TEST_STEPS.filter((s) => s.section === '表');
-  if (mode === '裏') return TEST_STEPS.filter((s) => s.section === '裏' || s.section === '参考');
-  return TEST_STEPS;
+const stepsForMode = (test: TestDef, mode: Mode): TestStep[] => {
+  if (mode === '表') return test.steps.filter((s) => s.section === '表');
+  if (mode === '裏') return test.steps.filter((s) => s.section === '裏' || s.section === '参考');
+  return test.steps;
+};
+
+/** さいごに選んだテスト（端末ごとの便利機能。読めなくても動く） */
+const LAST_TEST_KEY = 'syousu_last_test';
+const loadLastTest = (): TestId => {
+  try {
+    const v = localStorage.getItem(LAST_TEST_KEY);
+    return v === 'muldiv' ? 'muldiv' : 'shikumi';
+  } catch { return 'shikumi'; }
 };
 
 export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
   const [phase, setPhase] = useState<Phase>('INTRO');
   const [mode, setMode] = useState<Mode>('ぜんぶ');
+  const [testId, setTestId] = useState<TestId>(loadLastTest);
+  const test = TESTS.find((t) => t.id === testId) ?? TESTS[0]!;
   const [seed, setSeed] = useState(0); // 「もう一度」で問題を作り直す
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState<Record<number, boolean>>({}); // index -> ノーミス
@@ -49,10 +62,14 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
   const [predicted, setPredicted] = useState<number | null>(null); // できたつもり（やる前の自己予想）
 
   // 選んだ範囲のステップ
-  const activeSteps = useMemo<TestStep[]>(() => stepsForMode(mode), [mode]);
+  const activeSteps = useMemo<TestStep[]>(() => stepsForMode(test, mode), [test, mode]);
   // マウント（または もう一度・範囲変更）時に全問を一度だけ生成して固定
   const problems = useMemo<TestProblem[]>(() => activeSteps.map((s) => s.gen()), [activeSteps, seed]);
 
+  const pickTest = (id: TestId) => {
+    setTestId(id);
+    try { localStorage.setItem(LAST_TEST_KEY, id); } catch { /* 保存できなくても動く */ }
+  };
   const choose = (m: Mode) => {
     // 本番テストは実力を測る場面。ペア（1台を2人）のままなら、ここでソロに切り替える
     forceSolo();
@@ -133,10 +150,12 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
           skillId: skillIdOf(problems[i]), misses: misses[i] ?? 0, gaveUp: !!gaveUp[i] };
       }),
     };
-    recordResult({ moduleId: 'mock-test', skillId: 'mock-test', label: `本番テスト（${mode}）${totalScore}/${totalMax}点`, correct: totalScore === totalMax, detail });
+    // 小数のしくみは前からの記録（skillId 'mock-test'・ラベル）のまま。かけ算とわり算は 'mock-test-muldiv'
+    const labelHead = test.id === 'shikumi' ? '本番テスト' : `本番テスト「${test.short}」`;
+    recordResult({ moduleId: 'mock-test', skillId: test.recordSkillId, label: `${labelHead}（${mode}）${totalScore}/${totalMax}点`, correct: totalScore === totalMax, detail });
     // できたつもりチェック：予想していれば 実際（得点率）とのズレを記録（メタ認知キャリブレーション）
     if (predicted !== null && totalMax > 0) {
-      addCalibration({ skillId: 'mock-test', predicted, actual: totalScore / totalMax });
+      addCalibration({ skillId: test.recordSkillId, predicted, actual: totalScore / totalMax });
     }
     setRecorded(true);
   }
@@ -159,15 +178,29 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
           <div className="bg-surface rounded-[36px] shadow-2xl border border-line p-8 md:p-12 text-center mt-4">
             <div className="w-24 h-24 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-6"><ClipboardCheck size={44} /></div>
             <h1 className="text-3xl font-black text-content mb-2">本番テストモード</h1>
-            <p className="text-muted font-bold leading-relaxed mb-2">「5. 小数のしくみ」の テストに ちょうせん！</p>
+            <p className="text-muted font-bold leading-relaxed mb-3">どの テストに ちょうせんする？</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              {TESTS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => pickTest(t.id)}
+                  aria-pressed={t.id === testId}
+                  className={`rounded-2xl border-2 p-4 text-left transition-all active:scale-95 ${t.id === testId ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300' : 'border-line bg-surface hover:border-blue-300'}`}
+                >
+                  <div className="text-lg font-black text-content">{t.title}</div>
+                  <div className="text-xs font-bold text-muted mt-1">表 {t.omoteMax}点・裏 {t.uraMax}点</div>
+                </button>
+              ))}
+            </div>
+            <p className="text-muted font-bold leading-relaxed mb-2">「{test.title}」の テストに ちょうせん！</p>
             <p className="text-faint font-bold text-sm mb-6">どこに ちょうせんする？ 範囲を えらんでね。まちがえても 正しい こたえまで すすめるよ。一発で 正解できると 点が もらえるよ。</p>
             <div className="mb-6 text-left bg-surface-2 rounded-2xl border border-line p-4">
               <ConfidenceCheck value={predicted} onChange={setPredicted} label="はじめる前に：きょうは どれくらい できそう？" />
             </div>
             <div className="flex flex-wrap gap-3">
-              <RangeButton m="表" title="表だけ" sub="知識・ぎのう" max={OMOTE_MAX} color="border-blue-300 hover:border-blue-400 bg-blue-50/40" />
-              <RangeButton m="裏" title="裏だけ" sub="考える力（参考つき）" max={URA_MAX} color="border-rose-300 hover:border-rose-400 bg-rose-50/40" />
-              <RangeButton m="ぜんぶ" title="表＋裏" sub="ぜんぶ通し（参考つき）" max={TOTAL_MAX} color="border-amber-300 hover:border-amber-400 bg-amber-50/40" />
+              <RangeButton m="表" title="表だけ" sub="知識・ぎのう" max={test.omoteMax} color="border-blue-300 hover:border-blue-400 bg-blue-50/40" />
+              <RangeButton m="裏" title="裏だけ" sub="考える力（参考つき）" max={test.uraMax} color="border-rose-300 hover:border-rose-400 bg-rose-50/40" />
+              <RangeButton m="ぜんぶ" title="表＋裏" sub="ぜんぶ通し（参考つき）" max={test.totalMax} color="border-amber-300 hover:border-amber-400 bg-amber-50/40" />
             </div>
           </div>
         </div>
@@ -230,6 +263,7 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
             <div className="text-center mb-6">
               <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-amber-50 text-amber-500 mb-3"><Trophy size={40} /></motion.div>
               <h1 className="text-2xl font-black text-content">テスト けっか（{mode}）</h1>
+              <p className="text-sm font-bold text-muted mt-1">{test.title}</p>
               <div className="text-5xl font-black text-blue-600 tabular-nums mt-2">{totalScore}<span className="text-2xl text-muted"> / {totalMax}点</span></div>
               <div className="flex justify-center gap-3 mt-3">
                 {omoteMax > 0 && <span className="px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 font-black text-sm">表 {omoteScore}/{omoteMax}</span>}
@@ -270,7 +304,7 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
               <div className="rounded-2xl border border-line p-4 mb-6">
                 <p className="text-xs font-black text-faint mb-1">参考（点数なし・評価）</p>
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-content text-sm">いかそう算数（100m走の ならべかえ）</span>
+                  <span className="font-bold text-content text-sm">{activeSteps[refIndex]!.title}</span>
                   <span className={`font-black ${refPerfect ? 'text-emerald-600' : 'text-amber-500'}`}>{refPerfect ? 'A' : 'がんばろう'}</span>
                 </div>
               </div>
@@ -339,7 +373,7 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
       </div>
 
       {/* 本体（ステップごとに remount して内部状態をリセット） */}
-      <div className="flex-1 min-h-0" key={`${mode}-${seed}-${index}`}>
+      <div className="flex-1 min-h-0" key={`${test.id}-${mode}-${seed}-${index}`}>
         {renderActivity()}
       </div>
     </div>
@@ -373,6 +407,7 @@ export const TestActivity: React.FC<{
     case 'word': return <WordRound {...common} problem={tp.p} />;
     case 'error': return <ErrorRound ex={tp.p} startStage="fix" onNext={onNext} onResult={onResult} />;
     case 'order': return <OrderActivity {...common} problem={tp.p} level={tp.level} />;
+    case 'muldiv': return <MulDivRound {...common} q={tp.q} />;
   }
   return null;
 };
