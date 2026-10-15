@@ -6,6 +6,8 @@
 - 単元ごとの中身（問題の作り方・モジュール・本番テスト・実力の階段の段）は `src/lib/problems*`・`src/constants.ts`・
   `src/lib/testConfig.ts`・`src/lib/trialConfig.ts`・`src/components/modules/` にある。ここは自由に直してよい。
 - おまかせモードの習熟度は「記録に残した skillId」で引く。レベルIDと記録の名前がちがうモジュールだけ `useAdaptive(ids, toSkillId)`。
+- 本番テストは2つ（5. 小数のしくみ／13. 小数のかけ算とわり算）。紙のテストとの対応は `docs/DESIGN.md`。
+  かけ算・わり算の問題は `src/lib/decimalMulDiv.ts`（筆算・整数スケール）と `src/lib/mulDivQuestions.ts`（そのほか）。`npm run verify` で自動チェック。
 - 記録の名前: ふつうは レベルIDそのまま（`compose-2`）。たし算・ひき算は `addsub-<レベル>`／`addsub-build-<レベル>`／`addsub-master-<レベル>`、数直線の読み取りは `line-read-<レベル>`。
 
 ## 確かめ方

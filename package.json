@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "check": "npm run platform && npm run lint && npm run build",
+    "verify": "tsx scripts/verify-muldiv.ts",
+    "check": "npm run platform && npm run lint && npm run verify && npm run build",
     "platform": "learning-app-kit-platform check",
     "prebuild": "npm run platform"
   },

@@ -12,7 +12,7 @@ import { AppShell } from '../shared/AppShell';
 import { AnswerEntry } from '../shared/AnswerEntry';
 import { HintBox, ResultPanel, Button } from '../ui/primitives';
 import { WordProblem, generateWordProblem } from '../../lib/wordProblems';
-import { useProgressStore } from '../../store/progressStore';
+import { useProgressStore, type ModuleId } from '../../store/progressStore';
 import { playClear, playCorrect, playSoftTry } from '../../lib/sound';
 
 interface Props { onExit: () => void; }
@@ -49,7 +49,12 @@ export const WordProblemModule: React.FC<Props> = ({ onExit }) => {
   );
 };
 
-export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void }> = ({ problem, onNext, onResult, onMiss }) => {
+export const Round: React.FC<{
+  problem: WordProblem; onNext: () => void; onResult?: (perfect: boolean) => void; onMiss?: () => void; nextLabel?: string;
+  /** 記録の名前。ふだんは wp-<演算>。かけ算・わり算モジュールの文章題は mul-word / div-word */
+  skillId?: string;
+  moduleId?: ModuleId;
+}> = ({ problem, onNext, onResult, onMiss, nextLabel, skillId, moduleId }) => {
   const [stage, setStage] = useState<'shiki' | 'calc' | 'done'>('shiki');
   const [pickedWrong, setPickedWrong] = useState<number | null>(null);
   const [mistakes, setMistakes] = useState(0);
@@ -58,8 +63,8 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
   const recordResult = useProgressStore((s) => s.recordResult);
   // まちがえた回数を数え、正解までたどりつかずに離れたときも1件残す
   const rec = useRoundRecorder({
-    moduleId: 'word-problem',
-    skillId: `wp-${problem.op}`,
+    moduleId: moduleId ?? ('word-problem' as const),
+    skillId: skillId ?? `wp-${problem.op}`,
     record: recordResult,
     abandonLabel: () => problem.text.slice(0, 18) + '…',
   });
@@ -139,7 +144,7 @@ export const Round: React.FC<{ problem: WordProblem; onNext: () => void; onResul
         )}
 
         {stage === 'done' && (
-          <ResultPanel perfect={mistakes === 0} detail={<span className="tabular-nums">{problem.a} {problem.op} {problem.b} = {problem.answer} {problem.unit}</span>} onNext={onNext} accentClass="bg-brand hover:bg-brand-strong" />
+          <ResultPanel perfect={mistakes === 0} detail={<span className="tabular-nums">{problem.a} {problem.op} {problem.b} = {problem.answer} {problem.unit}</span>} onNext={onNext} nextLabel={nextLabel} accentClass="bg-brand hover:bg-brand-strong" />
         )}
       </div>
     </div>

@@ -146,7 +146,7 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, o
           </div>
           <div className="flex-1">
             <div className="text-xl font-black">📝 本番テストモード</div>
-            <div className="text-sm text-white/85 font-medium">「5.小数のしくみ」を テストと同じ 問題数で ちょうせん！</div>
+            <div className="text-sm text-white/85 font-medium">「5.小数のしくみ」「13.小数のかけ算とわり算」を テストと同じ 問題数で ちょうせん！</div>
           </div>
           <ChevronRight size={28} className="shrink-0 opacity-80" />
         </motion.button>
