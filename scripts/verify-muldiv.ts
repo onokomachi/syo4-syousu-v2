@@ -9,6 +9,7 @@ import { buildMul, buildDiv, type DivProblem } from '../src/lib/decimalMulDiv';
 import { ALL_MULDIV_LEVELS, generateMulDiv, describeMulDiv, type MulDivLevel } from '../src/lib/mulDivQuestions';
 import { TESTS, skillIdOf, describeProblem } from '../src/lib/testConfig';
 import { TRIAL, FLOOR_COUNT } from '../src/lib/trialConfig';
+import { generateError } from '../src/lib/errorHunter';
 
 let fails = 0;
 const fail = (msg: string) => { fails++; console.error('NG', msg); };
@@ -140,6 +141,23 @@ const md = TESTS.find((t) => t.id === 'muldiv')!;
 eq(md.steps.filter((s) => s.section === '表').length, 20, 'かけ算とわり算 表の問題数');
 eq(TRIAL.max, TESTS.reduce((a, t) => a + t.totalMax, 0), '実力の階段のテスト予想の満点');
 if (TRIAL.reqs.some((r) => r.floor < 1 || r.floor > FLOOR_COUNT)) fail('実力の階段 段の番号');
+
+// エラーハンター「なぜ まちがえたのか」を 長さで 当てられないか（正しい理由が いちばん長い／短い が 45% 以下。2026-11）
+{
+  const len = (t: string) => t.replace(/\s+/g, '').length;
+  let all = 0, longest = 0, shortest = 0;
+  for (let i = 0; i < 2000; i++) {
+    const e = generateError();
+    if (e.correctReasonIndex < 0) continue;  // 正しい式（理由を えらばない）
+    const L = e.reasonOptions.map(len); const c = L[e.correctReasonIndex]!;
+    all++;
+    if (L.every((l, j) => j === e.correctReasonIndex || l < c)) longest++;
+    if (L.every((l, j) => j === e.correctReasonIndex || l > c)) shortest++;
+  }
+  const lp = Math.round((longest / all) * 100), sp = Math.round((shortest / all) * 100);
+  console.log(`エラーハンターの理由: 正しい理由が いちばん長い ${lp}%・いちばん短い ${sp}%`);
+  if (lp > 45 || sp > 45) fail(`エラーハンターの理由が 長さで 当たる（いちばん長い ${lp}%・いちばん短い ${sp}%）`);
+}
 
 if (fails) { console.error(`\n${fails} 件 NG`); process.exit(1); }
 console.log(`OK かけ算・わり算 ${ALL_MULDIV_LEVELS.length}レベル × ${N}問・本番テスト${TESTS.length}つ・実力の階段 ${FLOOR_COUNT}段`);
