@@ -25,11 +25,15 @@ import { MatrixRain } from './components/ui/MatrixRain';
 import { DeepSeaRain } from './components/ui/DeepSeaRain';
 import { AuroraRain } from './components/ui/AuroraRain';
 import { CosmosRain } from './components/ui/CosmosRain';
+import { TrialLock, useTrialLocked } from 'learning-app-kit/react';
+import { mathTrialKey } from 'learning-app-kit/sync';
 
 type View = { kind: 'HUB' } | { kind: 'LOG' } | { kind: 'REFLECT' } | { kind: 'TEST' } | { kind: 'TRIAL' } | { kind: 'MODULE'; id: ModuleId };
 
 export default function App() {
   const [view, setView] = useState<View>({ kind: 'HUB' });
+  // 体験版（SOL の体験の入口から開いたとき）で PRISM が閉じた画面は、かわりに 🔒 を出す
+  const trialLocked = useTrialLocked(mathTrialKey(view.kind));
   const theme = useSettingsStore((s) => s.theme);
   useApplySettings();
 
@@ -66,26 +70,31 @@ export default function App() {
 
       <div className="relative z-10 w-full h-full">
       <AnimatePresence mode="wait">
+        {trialLocked && (
+          <motion.div key="trial-lock" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
+            <TrialLock onBack={() => setView({ kind: 'HUB' })} />
+          </motion.div>
+        )}
         {view.kind === 'HUB' && (
           <motion.div key="hub" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
             <Hub onSelectModule={(id) => setView({ kind: 'MODULE', id })} onOpenLog={() => setView({ kind: 'LOG' })} onStartTest={() => setView({ kind: 'TEST' })} onStartTrial={() => setView({ kind: 'TRIAL' })} onOpenReflect={() => setView({ kind: 'REFLECT' })} />
           </motion.div>
         )}
 
-        {view.kind === 'TEST' && (
+        {!trialLocked && view.kind === 'TEST' && (
           <motion.div key="test" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
             {/* テストのあと、まちがえた項目の練習へ直接飛べるようにする */}
               <MockTestModule onExit={goHub} onPractice={(id) => setView({ kind: 'MODULE', id })} />
           </motion.div>
         )}
-        {view.kind === 'TRIAL' && (
+        {!trialLocked && view.kind === 'TRIAL' && (
           <motion.div key="trial" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
             {/* テストのあと、まちがえた項目の練習へ直接飛べるようにする */}
               <TrialModule onExit={goHub} onPractice={(id) => setView({ kind: 'MODULE', id })} />
           </motion.div>
         )}
 
-        {view.kind === 'MODULE' && (
+        {!trialLocked && view.kind === 'MODULE' && (
           <motion.div key={`module-${view.id}`} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
             {renderModule(view.id)}
           </motion.div>
@@ -97,7 +106,7 @@ export default function App() {
           </motion.div>
         )}
 
-        {view.kind === 'REFLECT' && (
+        {!trialLocked && view.kind === 'REFLECT' && (
           <motion.div key="reflect" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="w-full h-full">
             <ReflectionView onBack={goHub} />
           </motion.div>
